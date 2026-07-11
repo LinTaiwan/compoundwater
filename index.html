@@ -347,33 +347,27 @@
   .insight-link{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:6px;margin-top:auto;}
   .insight-card:hover .insight-link{color:var(--yellow);}
 
-  /* ---------- TRADE JOURNAL (HORIZONTAL TIMELINE) ---------- */
-  .trade-timeline{
-    display:flex;gap:24px;overflow-x:auto;scroll-snap-type:x mandatory;
-    padding:34px 4px 20px;margin:0 -4px;
-    scrollbar-width:none;
+  /* ---------- TRADE JOURNAL (ZIGZAG TIMELINE) ---------- */
+  .trade-timeline{position:relative;padding-left:40px;}
+  .trade-timeline::before{
+    content:'';position:absolute;left:13px;top:6px;bottom:6px;width:2px;
+    background:linear-gradient(var(--yellow-dim), var(--line) 85%, var(--line));
   }
-  .trade-timeline::-webkit-scrollbar{display:none;}
-  .trade-item{
-    position:relative;flex:0 0 auto;width:300px;scroll-snap-align:start;
-  }
+  .trade-item{position:relative;margin-bottom:32px;}
+  .trade-item:last-child{margin-bottom:0;}
   .trade-item::before{
-    content:'';position:absolute;top:-16px;left:0;right:0;height:2px;background:var(--line);
+    content:'';position:absolute;left:-27px;top:34px;width:14px;height:14px;
+    border-radius:50%;background:var(--bg);border:2px solid var(--yellow);
+    box-shadow:0 0 0 4px var(--bg);z-index:1;
   }
-  .trade-item::after{
-    content:'';position:absolute;top:-22px;left:50%;transform:translateX(-50%);
-    width:14px;height:14px;border-radius:50%;background:var(--bg);border:2px solid var(--yellow);
-    z-index:1;
-  }
-  .trade-item:first-child::before{background:linear-gradient(90deg, var(--yellow-dim), var(--line));}
   .trade-card{
     background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-    padding:26px 28px;transition:border-color .15s;height:100%;
+    padding:26px 30px;transition:border-color .15s;
   }
   .trade-card:hover{border-color:var(--yellow-dim);}
   .trade-period{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--yellow-dim);letter-spacing:0.06em;margin-bottom:12px;}
-  .trade-highlight{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:clamp(17px,2vw,20px);color:var(--yellow);margin:0 0 14px;line-height:1.4;}
-  .trade-card p{color:#c9c9c1;font-size:13.5px;line-height:1.8;margin:0 0 16px;}
+  .trade-highlight{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:clamp(18px,2.1vw,23px);color:var(--yellow);margin:0 0 14px;line-height:1.4;}
+  .trade-card p{color:#c9c9c1;font-size:14px;line-height:1.8;margin:0 0 16px;}
   .trade-card p:last-of-type{margin-bottom:0;}
   .trade-links{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;}
   .trade-links a{
@@ -382,7 +376,7 @@
     transition:border-color .15s, color .15s;
   }
   .trade-links a:hover{border-color:var(--yellow-dim);color:var(--yellow);}
-  .trade-subgrid{display:grid;grid-template-columns:1fr;gap:10px;margin:16px 0 0;}
+  .trade-subgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:16px 0 0;}
   .trade-sub{
     background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);
     padding:12px 14px;font-family:'IBM Plex Mono',monospace;font-size:12px;
@@ -390,11 +384,32 @@
   .trade-sub .tag{color:var(--yellow);font-weight:600;display:block;margin-bottom:4px;}
   .trade-sub .val{color:var(--muted);}
 
+  /* Two-column zigzag on wider screens */
+  @media (min-width:860px){
+    .trade-timeline{
+      display:grid;grid-template-columns:1fr 1fr;column-gap:56px;row-gap:28px;
+      padding-left:0;
+    }
+    .trade-timeline::before{left:50%;transform:translateX(-50%);}
+    .trade-item{margin-bottom:0;}
+    .trade-item:nth-child(odd){grid-column:1;}
+    .trade-item:nth-child(even){grid-column:2;}
+    .trade-item::before{left:auto;}
+    .trade-item:nth-child(odd)::before{right:-38px;}
+    .trade-item:nth-child(even)::before{left:-38px;}
+  }
+  @media (max-width:640px){
+    .trade-timeline{padding-left:28px;}
+    .trade-timeline::before{left:6px;}
+    .trade-item::before{left:-20px;width:11px;height:11px;top:30px;}
+  }
+
   /* strategy block (standalone, below timeline) */
   .strategy-block{
-    border:1px solid var(--yellow);border-radius:var(--radius);
-    padding:30px 32px;margin-top:32px;
+    border:1px solid var(--line);border-radius:var(--radius);
+    padding:30px 32px;margin-top:32px;transition:border-color .15s;
   }
+  .strategy-block:hover{border-color:var(--yellow);}
   .strategy-block .trade-period{margin-bottom:12px;}
   .strategy-block .trade-highlight{margin-bottom:10px;font-size:clamp(19px,2.4vw,24px);}
   .strategy-block p{color:#c9c9c1;font-size:14px;line-height:1.85;margin:0 0 16px;}
@@ -408,7 +423,6 @@
   }
   @media (max-width:640px){
     .insight-card{width:78vw;}
-    .trade-item{width:78vw;}
   }
 
   /* contact */
@@ -729,19 +743,13 @@
   <!-- TRADE JOURNAL -->
   <section class="block" id="trades">
     <div class="wrap">
-      <div class="section-head reveal insights-head-row">
-        <div>
-          <div class="section-num">05 / TRADE JOURNAL</div>
-          <h2 class="section-title">交易回顧</h2>
-          <p class="section-sub">從 100 萬到千萬、再到歸零重來的交易旅程，紀錄真實的漲跌與心態淬鍊。</p>
-        </div>
-        <div class="carousel-nav">
-          <button class="carousel-btn" id="tradesPrev" aria-label="上一則">←</button>
-          <button class="carousel-btn" id="tradesNext" aria-label="下一則">→</button>
-        </div>
+      <div class="section-head reveal">
+        <div class="section-num">05 / TRADE JOURNAL</div>
+        <h2 class="section-title">交易回顧</h2>
+        <p class="section-sub">從 100 萬到千萬、再到歸零重來的交易旅程，紀錄真實的漲跌與心態淬鍊。</p>
       </div>
 
-      <div class="trade-timeline" id="tradesTrack">
+      <div class="trade-timeline">
 
         <div class="trade-item reveal">
           <div class="trade-card">
@@ -798,7 +806,7 @@
       <div class="strategy-block reveal">
         <div class="trade-period">METHODOLOGY</div>
         <h3 class="trade-highlight">平時交易策略與方法</h3>
-        <p>老實說比較偏向盤感交易，但每次下判斷操作時，通常會參考當下的數據與市場情緒：</p>
+        <p>較偏向盤感交易，但每次下判斷操作時，通常會參考當下的數據與市場情緒：</p>
         <div class="strategy-grid">
           <div class="strategy-item">
             <span class="snum mono">01 / 量化指標</span>
@@ -895,15 +903,6 @@
     const productsScrollAmount = () => productsTrack.querySelector('.product-card').offsetWidth + 20;
     productsPrev.addEventListener('click', () => productsTrack.scrollBy({left: -productsScrollAmount(), behavior: 'smooth'}));
     productsNext.addEventListener('click', () => productsTrack.scrollBy({left: productsScrollAmount(), behavior: 'smooth'}));
-  }
-
-  const tradesTrack = document.getElementById('tradesTrack');
-  const tradesPrev = document.getElementById('tradesPrev');
-  const tradesNext = document.getElementById('tradesNext');
-  if (tradesTrack && tradesPrev && tradesNext) {
-    const tradesScrollAmount = () => tradesTrack.querySelector('.trade-item').offsetWidth + 24;
-    tradesPrev.addEventListener('click', () => tradesTrack.scrollBy({left: -tradesScrollAmount(), behavior: 'smooth'}));
-    tradesNext.addEventListener('click', () => tradesTrack.scrollBy({left: tradesScrollAmount(), behavior: 'smooth'}));
   }
 </script>
 
