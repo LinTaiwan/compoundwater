@@ -64,7 +64,18 @@
   .navlinks{display:flex;gap:28px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);}
   .navlinks a{transition:color .15s;white-space:nowrap;}
   .navlinks a:hover{color:var(--yellow);}
-  .nav-toggle{display:none;background:none;border:1px solid var(--line);color:var(--text);width:36px;height:36px;border-radius:var(--radius);cursor:pointer;font-family:'IBM Plex Mono',monospace;}
+  .nav-toggle{display:none;background:none;border:1px solid var(--line);color:var(--text);width:36px;height:36px;border-radius:var(--radius);cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:16px;align-items:center;justify-content:center;}
+  @media (max-width:760px){
+    .nav-toggle{display:flex;}
+    .navlinks{
+      display:none;position:absolute;top:100%;left:0;right:0;
+      flex-direction:column;gap:0;background:var(--bg);
+      border-bottom:1px solid var(--line);padding:8px 24px 16px;
+    }
+    .navlinks.open{display:flex;}
+    .navlinks a{padding:14px 0;border-bottom:1px solid var(--line);}
+    .navlinks a:last-child{border-bottom:none;}
+  }
 
   /* ---------- HERO ---------- */
   .hero{
@@ -427,8 +438,6 @@
   .reveal.in{opacity:1;transform:translateY(0);}
 
   @media (max-width:760px){
-    .navlinks{display:none;}
-    .nav-toggle{display:block;}
     .product-card{grid-template-columns:1fr;padding:28px;width:84vw;}
     .pod-card{width:82vw;}
     .hero{padding:140px 0 80px;}
@@ -448,6 +457,7 @@
       <a href="#trades">交易回顧</a>
       <a href="#contact">聯繫</a>
     </nav>
+    <button class="nav-toggle" id="navToggle" aria-label="開啟選單">☰</button>
   </div>
 </header>
 
@@ -850,7 +860,18 @@
   }, {threshold:0.15});
   els.forEach(el=>io.observe(el));
 
-  const toggle = document.querySelector('.nav-toggle');
+  const toggle = document.getElementById('navToggle');
+  const navMenu = document.querySelector('.navlinks');
+  if (toggle && navMenu) {
+    toggle.addEventListener('click', () => {
+      navMenu.classList.toggle('open');
+      toggle.textContent = navMenu.classList.contains('open') ? '✕' : '☰';
+    });
+    navMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+      navMenu.classList.remove('open');
+      toggle.textContent = '☰';
+    }));
+  }
 
   const track = document.getElementById('insightsTrack');
   const prevBtn = document.getElementById('insightsPrev');
