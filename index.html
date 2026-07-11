@@ -347,28 +347,33 @@
   .insight-link{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:6px;margin-top:auto;}
   .insight-card:hover .insight-link{color:var(--yellow);}
 
-  /* ---------- TRADE JOURNAL (ZIGZAG TIMELINE) ---------- */
-  .trade-timeline{position:relative;padding-left:40px;}
-  .trade-timeline::before{
-    content:'';position:absolute;left:13px;top:6px;bottom:6px;width:2px;
-    background:linear-gradient(var(--yellow-dim), var(--line) 85%, var(--line));
+  /* ---------- TRADE JOURNAL (HORIZONTAL TIMELINE) ---------- */
+  .trade-timeline{
+    display:flex;gap:24px;overflow-x:auto;scroll-snap-type:x mandatory;
+    padding:34px 4px 20px;margin:0 -4px;
+    scrollbar-width:none;
   }
-  .trade-item{position:relative;margin-bottom:32px;}
-  .trade-item:last-child{margin-bottom:0;}
+  .trade-timeline::-webkit-scrollbar{display:none;}
+  .trade-item{
+    position:relative;flex:0 0 auto;width:300px;scroll-snap-align:start;
+  }
   .trade-item::before{
-    content:'';position:absolute;left:-27px;top:34px;width:14px;height:14px;
-    border-radius:50%;background:var(--bg);border:2px solid var(--yellow);
-    box-shadow:0 0 0 4px var(--bg);z-index:1;
+    content:'';position:absolute;top:-16px;left:0;right:0;height:2px;background:var(--line);
   }
-  .trade-item.is-method::before{border-color:var(--muted);}
+  .trade-item::after{
+    content:'';position:absolute;top:-22px;left:50%;transform:translateX(-50%);
+    width:14px;height:14px;border-radius:50%;background:var(--bg);border:2px solid var(--yellow);
+    z-index:1;
+  }
+  .trade-item:first-child::before{background:linear-gradient(90deg, var(--yellow-dim), var(--line));}
   .trade-card{
     background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-    padding:26px 30px;transition:border-color .15s;
+    padding:26px 28px;transition:border-color .15s;height:100%;
   }
   .trade-card:hover{border-color:var(--yellow-dim);}
   .trade-period{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--yellow-dim);letter-spacing:0.06em;margin-bottom:12px;}
-  .trade-highlight{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:clamp(18px,2.1vw,23px);color:var(--yellow);margin:0 0 14px;line-height:1.4;}
-  .trade-card p{color:#c9c9c1;font-size:14px;line-height:1.8;margin:0 0 16px;}
+  .trade-highlight{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:clamp(17px,2vw,20px);color:var(--yellow);margin:0 0 14px;line-height:1.4;}
+  .trade-card p{color:#c9c9c1;font-size:13.5px;line-height:1.8;margin:0 0 16px;}
   .trade-card p:last-of-type{margin-bottom:0;}
   .trade-links{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;}
   .trade-links a{
@@ -377,47 +382,33 @@
     transition:border-color .15s, color .15s;
   }
   .trade-links a:hover{border-color:var(--yellow-dim);color:var(--yellow);}
-  .trade-subgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:16px 0 0;}
+  .trade-subgrid{display:grid;grid-template-columns:1fr;gap:10px;margin:16px 0 0;}
   .trade-sub{
     background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);
     padding:12px 14px;font-family:'IBM Plex Mono',monospace;font-size:12px;
   }
   .trade-sub .tag{color:var(--yellow);font-weight:600;display:block;margin-bottom:4px;}
   .trade-sub .val{color:var(--muted);}
-  .trade-strategy{
+
+  /* strategy block (standalone, below timeline) */
+  .strategy-block{
     border:1px solid var(--yellow);border-radius:var(--radius);
-    padding:26px 30px;
+    padding:30px 32px;margin-top:32px;
   }
-  .trade-strategy .trade-highlight{margin-bottom:10px;}
+  .strategy-block .trade-period{margin-bottom:12px;}
+  .strategy-block .trade-highlight{margin-bottom:10px;font-size:clamp(19px,2.4vw,24px);}
+  .strategy-block p{color:#c9c9c1;font-size:14px;line-height:1.85;margin:0 0 16px;}
   .strategy-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:18px 0 4px;}
   .strategy-item{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;}
   .strategy-item .snum{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--yellow-dim);margin-bottom:8px;display:block;}
   .strategy-item p{font-size:13px;line-height:1.7;margin:0;color:#c9c9c1;}
 
-  /* Two-column zigzag on wider screens */
-  @media (min-width:860px){
-    .trade-timeline{
-      display:grid;grid-template-columns:1fr 1fr;column-gap:56px;row-gap:28px;
-      padding-left:0;
-    }
-    .trade-timeline::before{left:50%;transform:translateX(-50%);}
-    .trade-item{margin-bottom:0;}
-    .trade-item:nth-child(odd){grid-column:1;}
-    .trade-item:nth-child(even){grid-column:2;}
-    .trade-item::before{left:auto;}
-    .trade-item:nth-child(odd)::before{right:-38px;}
-    .trade-item:nth-child(even)::before{left:-38px;}
-    .trade-item-full{grid-column:1 / -1;}
-    .trade-item-full::before{left:50%;transform:translateX(-50%);}
-  }
   @media (max-width:700px){
     .strategy-grid{grid-template-columns:1fr;}
   }
   @media (max-width:640px){
     .insight-card{width:78vw;}
-    .trade-timeline{padding-left:28px;}
-    .trade-timeline::before{left:6px;}
-    .trade-item::before{left:-20px;width:11px;height:11px;top:30px;}
+    .trade-item{width:78vw;}
   }
 
   /* contact */
@@ -640,7 +631,7 @@
         </a>
         <a class="insight-card" href="https://www.instagram.com/p/CPEImmRsK-C/" target="_blank" rel="noopener">
           <div class="insight-meta"><span>2021.05.20</span><span class="insight-source">Instagram</span></div>
-          <h4>首個千萬里程碑紀錄</h4>
+          <h4>28歲首個千萬里程碑紀錄</h4>
           <span class="insight-link">閱讀全文 ↗</span>
         </a>
         <a class="insight-card" href="https://medium.com/compoundwater-fund/%E9%97%9C%E6%96%BC%E4%BA%BA%E7%94%9F%E9%BB%9E%E6%BB%B4%E7%9A%84%E4%B8%80%E4%BA%9B%E9%AB%94%E6%82%9F-from%E8%A4%87%E6%B0%B4-b5b827b6fdf6" target="_blank" rel="noopener">
@@ -650,12 +641,12 @@
         </a>
         <a class="insight-card" href="https://www.cake.me/resources/success-stories/podcast-interview-ex-tsmc-rd-frank-lin" target="_blank" rel="noopener">
           <div class="insight-meta"><span>2021</span><span class="insight-source">Cake.me</span></div>
-          <h4>科技職涯訪談 — 人物專訪</h4>
+          <h4>Cake科技職涯訪談-人物專訪</h4>
           <span class="insight-link">閱讀全文 ↗</span>
         </a>
         <a class="insight-card" href="https://medium.com/compoundwater-fund/%E7%82%BA%E4%BA%86%E8%A6%81%E5%AD%98%E5%9C%A8-%E9%A6%96%E5%85%88%E5%BF%85%E9%A0%88%E5%85%88%E4%B8%8D%E5%9C%A8-%E6%88%91%E7%9A%84%E9%9A%94%E9%9B%A221%E5%A4%A9-da4e335ba15d" target="_blank" rel="noopener">
           <div class="insight-meta"><span>2022</span><span class="insight-source">Medium</span></div>
-          <h4>我的隔離 21 天</h4>
+          <h4>我的北京隔離21天-COVID19</h4>
           <span class="insight-link">閱讀全文 ↗</span>
         </a>
         <a class="insight-card" href="https://paragraph.com/@compoundwater/web3" target="_blank" rel="noopener">
@@ -738,13 +729,19 @@
   <!-- TRADE JOURNAL -->
   <section class="block" id="trades">
     <div class="wrap">
-      <div class="section-head reveal">
-        <div class="section-num">05 / TRADE JOURNAL</div>
-        <h2 class="section-title">交易回顧</h2>
-        <p class="section-sub">從 100 萬到千萬、再到歸零重來的交易旅程，紀錄真實的漲跌與心態淬鍊。</p>
+      <div class="section-head reveal insights-head-row">
+        <div>
+          <div class="section-num">05 / TRADE JOURNAL</div>
+          <h2 class="section-title">交易回顧</h2>
+          <p class="section-sub">從 100 萬到千萬、再到歸零重來的交易旅程，紀錄真實的漲跌與心態淬鍊。</p>
+        </div>
+        <div class="carousel-nav">
+          <button class="carousel-btn" id="tradesPrev" aria-label="上一則">←</button>
+          <button class="carousel-btn" id="tradesNext" aria-label="下一則">→</button>
+        </div>
       </div>
 
-      <div class="trade-timeline">
+      <div class="trade-timeline" id="tradesTrack">
 
         <div class="trade-item reveal">
           <div class="trade-card">
@@ -796,30 +793,30 @@
           </div>
         </div>
 
-        <div class="trade-item is-method trade-item-full reveal">
-          <div class="trade-card trade-strategy">
-            <div class="trade-period">METHODOLOGY</div>
-            <h3 class="trade-highlight">平時交易策略與方法</h3>
-            <p>老實說比較偏向盤感交易，但每次下判斷操作時，通常會參考當下的數據與市場情緒：</p>
-            <div class="strategy-grid">
-              <div class="strategy-item">
-                <span class="snum mono">01 / 量化指標</span>
-                <p>市場未平倉持倉量（OI）、資金費率、借貸利率、多空比、爆倉數據、期權痛點等</p>
-              </div>
-              <div class="strategy-item">
-                <span class="snum mono">02 / 基本面與宏觀</span>
-                <p>標普 500 指數歷史、聯準會利率、公司財務數據等</p>
-              </div>
-              <div class="strategy-item">
-                <span class="snum mono">03 / 事件驅動與技術面</span>
-                <p>消息面新聞、IEO、諧波與型態交易、市場恐慌情緒等</p>
-              </div>
-            </div>
-            <div class="trade-links">
-              <a href="https://compoundwater.notion.site/Some-Trading-Record-by-Frank-267f39ffe6e440e7b930e3275ef0b87c?pvs=74" target="_blank" rel="noopener">一些策略紀錄 ↗</a>
-            </div>
+      </div>
+
+      <div class="strategy-block reveal">
+        <div class="trade-period">METHODOLOGY</div>
+        <h3 class="trade-highlight">平時交易策略與方法</h3>
+        <p>老實說比較偏向盤感交易，但每次下判斷操作時，通常會參考當下的數據與市場情緒：</p>
+        <div class="strategy-grid">
+          <div class="strategy-item">
+            <span class="snum mono">01 / 量化指標</span>
+            <p>市場未平倉持倉量（OI）、資金費率、借貸利率、多空比、爆倉數據、期權痛點等</p>
+          </div>
+          <div class="strategy-item">
+            <span class="snum mono">02 / 基本面與宏觀</span>
+            <p>標普 500 指數歷史、聯準會利率、公司財務數據等</p>
+          </div>
+          <div class="strategy-item">
+            <span class="snum mono">03 / 事件驅動與技術面</span>
+            <p>消息面新聞、IEO、諧波與型態交易、市場恐慌情緒等</p>
           </div>
         </div>
+        <div class="trade-links">
+          <a href="https://compoundwater.notion.site/Some-Trading-Record-by-Frank-267f39ffe6e440e7b930e3275ef0b87c?pvs=74" target="_blank" rel="noopener">一些策略紀錄 ↗</a>
+        </div>
+      </div>
 
       </div>
     </div>
@@ -898,6 +895,15 @@
     const productsScrollAmount = () => productsTrack.querySelector('.product-card').offsetWidth + 20;
     productsPrev.addEventListener('click', () => productsTrack.scrollBy({left: -productsScrollAmount(), behavior: 'smooth'}));
     productsNext.addEventListener('click', () => productsTrack.scrollBy({left: productsScrollAmount(), behavior: 'smooth'}));
+  }
+
+  const tradesTrack = document.getElementById('tradesTrack');
+  const tradesPrev = document.getElementById('tradesPrev');
+  const tradesNext = document.getElementById('tradesNext');
+  if (tradesTrack && tradesPrev && tradesNext) {
+    const tradesScrollAmount = () => tradesTrack.querySelector('.trade-item').offsetWidth + 24;
+    tradesPrev.addEventListener('click', () => tradesTrack.scrollBy({left: -tradesScrollAmount(), behavior: 'smooth'}));
+    tradesNext.addEventListener('click', () => tradesTrack.scrollBy({left: tradesScrollAmount(), behavior: 'smooth'}));
   }
 </script>
 
