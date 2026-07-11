@@ -9,7 +9,7 @@
 //    （資料夾名稱一定要叫 `api`，Vercel 會自動把裡面的檔案變成 API）
 //
 // 2. 到 Vercel 專案 → Settings → Environment Variables，新增一筆：
-//      Key:   GEMINI_API_KEY
+//      Key:   GEMINI_API_KEY_MAINPAGE
 //      Value: 你的 Gemini API 金鑰（去 https://aistudio.google.com/apikey 申請）
 //    新增後記得重新部署一次（Redeploy），環境變數才會生效。
 //
@@ -24,9 +24,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY_MAINPAGE;
   if (!apiKey) {
-    return res.status(500).json({ error: '尚未設定 GEMINI_API_KEY' });
+    return res.status(500).json({ error: '尚未設定 GEMINI_API_KEY_MAINPAGE' });
   }
 
   const { messages } = req.body || {};
