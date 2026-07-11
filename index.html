@@ -335,8 +335,78 @@
   .insight-source{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;}
   .insight-link{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:6px;margin-top:auto;}
   .insight-card:hover .insight-link{color:var(--yellow);}
+
+  /* ---------- TRADE JOURNAL (ZIGZAG TIMELINE) ---------- */
+  .trade-timeline{position:relative;padding-left:40px;}
+  .trade-timeline::before{
+    content:'';position:absolute;left:13px;top:6px;bottom:6px;width:2px;
+    background:linear-gradient(var(--yellow-dim), var(--line) 85%, var(--line));
+  }
+  .trade-item{position:relative;margin-bottom:32px;}
+  .trade-item:last-child{margin-bottom:0;}
+  .trade-item::before{
+    content:'';position:absolute;left:-27px;top:34px;width:14px;height:14px;
+    border-radius:50%;background:var(--bg);border:2px solid var(--yellow);
+    box-shadow:0 0 0 4px var(--bg);z-index:1;
+  }
+  .trade-item.is-method::before{border-color:var(--muted);}
+  .trade-card{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:26px 30px;transition:border-color .15s;
+  }
+  .trade-card:hover{border-color:var(--yellow-dim);}
+  .trade-period{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--yellow-dim);letter-spacing:0.06em;margin-bottom:12px;}
+  .trade-highlight{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:clamp(18px,2.1vw,23px);color:var(--yellow);margin:0 0 14px;line-height:1.4;}
+  .trade-card p{color:#c9c9c1;font-size:14px;line-height:1.8;margin:0 0 16px;}
+  .trade-card p:last-of-type{margin-bottom:0;}
+  .trade-links{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;}
+  .trade-links a{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);
+    border:1px solid var(--line);border-radius:var(--radius);padding:8px 14px;
+    transition:border-color .15s, color .15s;
+  }
+  .trade-links a:hover{border-color:var(--yellow-dim);color:var(--yellow);}
+  .trade-subgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:16px 0 0;}
+  .trade-sub{
+    background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);
+    padding:12px 14px;font-family:'IBM Plex Mono',monospace;font-size:12px;
+  }
+  .trade-sub .tag{color:var(--yellow);font-weight:600;display:block;margin-bottom:4px;}
+  .trade-sub .val{color:var(--muted);}
+  .trade-strategy{
+    border:1px solid var(--yellow);border-radius:var(--radius);
+    padding:26px 30px;
+  }
+  .trade-strategy .trade-highlight{margin-bottom:10px;}
+  .strategy-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:18px 0 4px;}
+  .strategy-item{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;}
+  .strategy-item .snum{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--yellow-dim);margin-bottom:8px;display:block;}
+  .strategy-item p{font-size:13px;line-height:1.7;margin:0;color:#c9c9c1;}
+
+  /* Two-column zigzag on wider screens */
+  @media (min-width:860px){
+    .trade-timeline{
+      display:grid;grid-template-columns:1fr 1fr;column-gap:56px;row-gap:28px;
+      padding-left:0;
+    }
+    .trade-timeline::before{left:50%;transform:translateX(-50%);}
+    .trade-item{margin-bottom:0;}
+    .trade-item:nth-child(odd){grid-column:1;}
+    .trade-item:nth-child(even){grid-column:2;}
+    .trade-item::before{left:auto;}
+    .trade-item:nth-child(odd)::before{right:-38px;}
+    .trade-item:nth-child(even)::before{left:-38px;}
+    .trade-item-full{grid-column:1 / -1;}
+    .trade-item-full::before{left:50%;transform:translateX(-50%);}
+  }
+  @media (max-width:700px){
+    .strategy-grid{grid-template-columns:1fr;}
+  }
   @media (max-width:640px){
     .insight-card{width:78vw;}
+    .trade-timeline{padding-left:28px;}
+    .trade-timeline::before{left:6px;}
+    .trade-item::before{left:-20px;width:11px;height:11px;top:30px;}
   }
 
   /* contact */
@@ -375,6 +445,7 @@
       <a href="#media">播客訪談</a>
       <a href="#insights">觀點內容</a>
       <a href="#products">作品工具</a>
+      <a href="#trades">交易回顧</a>
       <a href="#contact">聯繫</a>
     </nav>
   </div>
@@ -476,6 +547,20 @@
         </div>
       </div>
       <div class="pod-grid" id="podcastTrack">
+        <a class="pod-card reveal" href="https://podcasts.apple.com/tw/podcast/54-frank-compoundwater-%E8%87%AA%E7%94%B1%E9%9D%88%E9%AD%82%E7%9A%84%E4%BB%A3%E5%83%B9/id1544225078?i=1000581324978" target="_blank" rel="noopener">
+          <div class="pod-cover">
+            <svg viewBox="0 0 400 120" preserveAspectRatio="none"><rect width="400" height="120" fill="#1c1c1c"/><g stroke="#9aa816" stroke-width="2" opacity="0.55"><line x1="10" y1="60" x2="10" y2="38"/><line x1="24" y1="60" x2="24" y2="82"/><line x1="38" y1="60" x2="38" y2="26"/><line x1="52" y1="60" x2="52" y2="88"/><line x1="66" y1="60" x2="66" y2="44"/><line x1="80" y1="60" x2="80" y2="72"/><line x1="94" y1="60" x2="94" y2="30"/><line x1="108" y1="60" x2="108" y2="90"/><line x1="122" y1="60" x2="122" y2="50"/><line x1="136" y1="60" x2="136" y2="60"/><line x1="150" y1="60" x2="150" y2="35"/><line x1="164" y1="60" x2="164" y2="92"/><line x1="178" y1="60" x2="178" y2="38"/><line x1="192" y1="60" x2="192" y2="74"/><line x1="206" y1="60" x2="206" y2="22"/><line x1="220" y1="60" x2="220" y2="96"/><line x1="234" y1="60" x2="234" y2="45"/><line x1="248" y1="60" x2="248" y2="58"/><line x1="262" y1="60" x2="262" y2="32"/><line x1="276" y1="60" x2="276" y2="82"/><line x1="290" y1="60" x2="290" y2="48"/><line x1="304" y1="60" x2="304" y2="66"/><line x1="318" y1="60" x2="318" y2="36"/><line x1="332" y1="60" x2="332" y2="92"/><line x1="346" y1="60" x2="346" y2="42"/><line x1="360" y1="60" x2="360" y2="70"/><line x1="374" y1="60" x2="374" y2="28"/><line x1="388" y1="60" x2="388" y2="84"/></g></svg>
+            <span class="show mono">電扶梯走左邊 with Jacky</span>
+          </div>
+          <div class="pod-body">
+            <div class="pod-thumb"><img src="data:image/jpeg;base64,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" alt="電扶梯走左邊 with Jacky"></div>
+            <div class="pod-text">
+              <div class="pod-num">01</div>
+              <h4>EP54｜我們都是自由靈魂 :)</h4>
+              <span class="pod-link">在Apple播客收聽 ↗</span>
+            </div>
+          </div>
+        </a>
         <a class="pod-card reveal" href="https://podcasts.apple.com/tw/podcast/s2ep35-%E5%89%8D%E5%8F%B0%E7%A9%8D%E9%9B%BB%E5%B7%A5%E7%A8%8B%E5%B8%AB%E5%A6%82%E4%BD%95%E9%82%81%E5%90%91%E8%87%AA%E7%94%B1%E4%B9%8B%E8%B7%AF-%E5%9C%A8%E6%8A%95%E8%B3%87%E5%B0%8F%E5%AE%87%E5%AE%99%E7%99%BC%E5%85%89%E7%9A%84-frank/id1500645516?i=1000516370179" target="_blank" rel="noopener">
           <div class="pod-cover">
             <svg viewBox="0 0 400 120" preserveAspectRatio="none"><rect width="400" height="120" fill="#1c1c1c"/><g stroke="#9aa816" stroke-width="2" opacity="0.55"><line x1="10" y1="60" x2="10" y2="30"/><line x1="24" y1="60" x2="24" y2="80"/><line x1="38" y1="60" x2="38" y2="20"/><line x1="52" y1="60" x2="52" y2="90"/><line x1="66" y1="60" x2="66" y2="40"/><line x1="80" y1="60" x2="80" y2="70"/><line x1="94" y1="60" x2="94" y2="25"/><line x1="108" y1="60" x2="108" y2="85"/><line x1="122" y1="60" x2="122" y2="45"/><line x1="136" y1="60" x2="136" y2="65"/><line x1="150" y1="60" x2="150" y2="30"/><line x1="164" y1="60" x2="164" y2="90"/><line x1="178" y1="60" x2="178" y2="35"/><line x1="192" y1="60" x2="192" y2="75"/><line x1="206" y1="60" x2="206" y2="20"/><line x1="220" y1="60" x2="220" y2="95"/><line x1="234" y1="60" x2="234" y2="40"/><line x1="248" y1="60" x2="248" y2="55"/><line x1="262" y1="60" x2="262" y2="28"/><line x1="276" y1="60" x2="276" y2="80"/><line x1="290" y1="60" x2="290" y2="45"/><line x1="304" y1="60" x2="304" y2="65"/><line x1="318" y1="60" x2="318" y2="36"/><line x1="332" y1="60" x2="332" y2="92"/><line x1="346" y1="60" x2="346" y2="42"/><line x1="360" y1="60" x2="360" y2="70"/><line x1="374" y1="60" x2="374" y2="28"/><line x1="388" y1="60" x2="388" y2="84"/></g></svg>
@@ -484,7 +569,7 @@
           <div class="pod-body">
             <div class="pod-thumb"><img src="data:image/jpeg;base64,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" alt="科技職涯 Talent Connect"></div>
             <div class="pod-text">
-              <div class="pod-num">01</div>
+              <div class="pod-num">02</div>
               <h4>S2EP35｜邁向自定義的自由 — 離開台積</h4>
               <span class="pod-link">在Apple播客收聽 ↗</span>
             </div>
@@ -498,22 +583,8 @@
           <div class="pod-body">
             <div class="pod-thumb"><img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAB4AHgDASIAAhEBAxEB/8QAHQAAAgIDAQEBAAAAAAAAAAAAAAcFBgMECAIBCf/EAEEQAAICAgEDAwICBgYGCwAAAAECAwQFEQAGEiETMUEHIhRRCBUyYXGBI0JikaGiFkNScrHCFzM1Y3OCkrLB0fH/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8A6p4cOHAOHKl1917jeh4IpsrTys8To8helTaZY1TWy7Dwvv8AJ5ZqFqO9Rr24e70p41lTuGjpgCN/38DPw4tMz9YsFisBZv2q1yvbgyIxj0LSiGUSbG22T29oQ9/cCRrX58k+ifqf0z1dkbWPx1+Bb8NmWCOu0qlrCoN+rHonuQjyD+474F44cUsP1xwsksqjE5XSRWpft9Fm1XVi+0Dll32nt7gN8nui/qXjuq7WRr1KF6J6NVLb7McodW3pV9N2232/s+/twL5w4tf+l/Gduz031kBrZ3hJvHJjor6hYzrbCZHI9OVchOtMlPTlg9IyuF32ozHtJ+PfxvzrgXLhxbZX6r1cXj8BYvYHNwT5SzLWak9cmxD6YPqP6a7LqDryvuDvkhS+qfTFnCZTKvYt1amNmSvYFmnJHIsjAFUCEdxJ2PAHyOBeeHK30X1rg+soLT4OzJI9RxHYhmheGWJj5HcjAEb+DyycA4cOHAOHDhwIrqvEJn+mctiJCFS9VlrFj8d6ld/y3ypfRfqP9bdHwYi8fQ6hwiDH5Cq/7cckY7Q+vlWADA+x3xhcjkweMTNzZhKNdcpNAK8lpU1I0YOwpP5f/Q/IcDl36km5bvWJc/k1yWbwXUdbHQXIkNVhXkgMrbSIMR9wH3BWbx437cm/0dLgodUXkyUtiITyW3jEz2ip+4P6hDwqgHarH1GYMflRvjaP0j6OFSGKHGPXsQu0iXq9mSK13MdkmZWDt5/Mnm7hPp7i8Vko7ov567Iisojv5WexEQylTtHYqfBPuOByx1rctR5bKWEyLOtnOu0MsF8SK1d5T2gFLQ0pHx2L4/rjjj/RwmaLMdUw2bkZWc13qQNcSRuxVYSFUE0pUAld/cfcfw4xc79NulMxXrRS4alWWCxHZBq144ixQ7CsQvlT8r88ncb09hsZYM+NxOPqTlSvqV6yRto+42oB14HAof10WS3X6RxDWLMVDLZ2CldSCVozNCyOWQsPOjocuVzpzFL0lLgoFbGYpYfTH4KQ1zCg87Vl8r7bJ+fO98jcl9P8TkusK3UV6xlJrFaVLENVrj/hY5VXtDrF7A8seZxlXM4m5jchGZKduJoZkDlSyMNEbBBHj8uBznlsxZqrgOscXJPdxtmpJg4sznrMkZrHvdfxAMSnsEgC6k1vetgfNz+gkk9X6eZvOZOFEWzbmu/jrlp3NwIoHrszqO1Ps8HXsN65brn0t6UvXac1+hJZgpwR169KWxI1WNUGgRDvt3rXkj45u9NdA9P9N18lVxdWVaN8dstOad5YFXRBVEYkKDs7A9+BBfRbEo2Lu9V2sjVyeZ6hkE9uzUfugUJtUij/ALKjx5873vjH5o4TE0MHjIMdiKkNOjACI4YV7VXZ2dD+JJ5vcA4cOHAOHDi4uYrOnrGv+tMtlJ6szMYlxlYpFAOwoGkZmPadt4ChjvZOh4AMSGWOaMPC6yISQGU7Hg6Pkfv574nMj04uByVXC4LqO3DeZBYiis6WuqjQQuyj9rcZ7dgj7ACDrTNnFR24cfCmRsR2LYH9JLHH2Kx38Ls6Hx7/ABwM1mxDVgknsyxwwxqWeSRgqqB7kk+AOYHydFI6rtbrhLbhK59QamYjYCf7R0CfHwDyr9eVZ717H0MdfvV794NGBFOVhjiXy8zqP2iO5VA2NllB8b5SaXT3St9MdBB1D1Di5ljdakticQrdEjl2dSV7W72PlVKkgDYA1wHTw5U+jjJibljA5EH8YF/EwziSRo7MWwpZVdmKFT2hkB0O5SP2tC2cDG88KTRwvLGssm+xCwDNr30PnXNarlKVvIWqVawktmr2+uibPpk+wJ9gdedb3rR15HFTJgOpeqeqv+0IoKGKs95msyG3qcHuCRqgiUFRrZ86327JDAT9TofNYy2bdTNVbnpStNWpWqrxQRMxJJHpyeWJZvvdXPkngMThyK6cy5y9KRpqz1LleVq9mszdxikGjoN/WUgqwPyGB0Pbi7+qU0VTq6k82Wu4dJKZYTVoJ5xOysV0VjYeVDgg/wBrzvxoGN+vsZ+sZ6LXIksQukTBz2gyMO4ICfDNoqSB5AZfzHJCaWOCJ5ZnWOJAWZ2OgoHuST7c5+yD4G9JDYHUt/8AFR+pJA2OwsyTK8hbvcNMWVWYk7c6P2jRXtGozBi9cwN2p1DZ/FVKFYRNdFR8hFEPTIYvH62l7CrgMilT2bBHA6XBDAEEEHyCOHNDANG+Dx7QPI8RrxlGkjaNmHaNEq3kH9x88OBv8UGHTKdVdQ2o+oo4KX4gzpWeEeodQOIpRGWc9jBj3K3aD7tocb54m5q9jJXlu2Ls+J6dvXJLGLtQRqzRzPtD6zMPtjl2WUDQPfpmBKjgT6YfHZKhkp5blmpKqE5KC0YrEkZ9PtJLMCQO1djzrwCADvn36T5DqK9+OjzH4cUK/asQ7meVWdVlVC5O27Y5EB2Ae7YGwOVKp0blZbV3CYHLxGswFfJ3krsV+0g9hLuwZ9bDIo19zd7AnRv/AEvHa6YyEGAvyR24rYlsQXwnZLLIGDSCYeQXPd3BhoEAjS6GwiesIDk+qchWXKSY5/wMNOMohYzNJ68jRjXkbWJSdEE9ugRvmhPnFyPRiY6WSKNYXjhkeFYBEYyjMqv3I6REBQCoVvOgPDbEhkDiLWT6piy9/wDBepaiWvYU6aBq8ML+oG0QCrSg+fHvvxvmtmMP1Cr3HyUuJmlnASK0LzUo17QOxnjEZY6cF+3vYbOuB5iUYu/iJaszfhIJqlmCvOxMteC13QSRk+wTvMbAbOiCBoKOMXNXRjcNevMvcKsEk5H59qlv/jir6vysWKxeaiyMkl3NW5oIHtQxkQpYVTLFWiXZYhe1Sfc7lBPk6DC67kC9CdQOdgfq6x7/AL424FLwuQzFHLVcTNK1DERUYnktrGsrTWJg/dIffsUySb23yntok89DN9bV8mMWxxl6RJu02o2MSswKuIW7k0CY1ceN6LDRJUjmfIWaMHUUzX5WNKvBDXa3GjenSsKO4LPr7WHlXBPhT4bW15tXshiZZ2k6dnr5bqawmk/BSF4Y5SvZ68gUlY1APuTvXgbJ8hMYOQr1jlVliaCS3RqW2hZgSr7kjYEgkEgKg2PHIn6rnF0FwmbzUhSrTstDIUkZJQkyGMmPt+4kHtJA91DeDz1hrofrmhXeO6LtfGy1bX4pAHbteMxykjasr/0mmB1vYOj45s5vEVuoOq8tjsgGeE4RYU/7sTySrIy/kSI08/2eBXKdrpWJLjWshTyMjO7QRYwyi5Op7iVmVW27aYrtteN71s82Pp5R6d6nxFa5coL+sXJyBrSxtF6cczd8ahfCyRAKuj5Uld+DzWwnU97N9FU+n8g5Xqe4Foyuv+si+5ZLS/uCpJv8pB2/I3v9LItXGfTieABENVsc3+4YC4U/zgHAZHDhw4Fb63sZGODF1sTaiqTXbgrNJLD6oCmKRj9vcvyo875F02v4bp+vhM/gmv46KslRrGO/p1dAvb98J042B7KH/jyd6ooXbi42fGCs9mjbFkRWGZEkHpuhXuUEqdPsHR9vbmonV0FRli6jp2MLISB6ljTV2P7p12o/83af3cCtdP5ijB9J7tWnOBYoQS0hEgaObvLPHCSp0weQ9pBI2S2+TWMSS/1XTjdvUXBUvSnl2SGtSqm138lUUk/+KvKN1bUs576k2YMPaSedq9cwqszKKjBXZbvcuw3Z3FQjeGL6H9bjbweKr4bHR1KvewBLvJIe55XY7Z3PyzEkk/v4Gh1VgRlqINQV478MhnhaVO6N2KlWSQfKOhKN86Ox5A4melYGyeD6oSLCY/K2lT7e9PxFmuGj9MVnkIBEsSx7IAO9gDTb41PqjkP1dgIJZmuJQayq3Gqd4k9MI7BQyfcvc6ohYEaDe49+LOfCS1KGKxGaq5Otdkp+gkr4ivkCvaNuI3hPcQCxIDqx8k+fPAx4qazd6QtSmnk8lJXrTrTtQU5I0mkc9732aQL5OlKovcQFIG+4abnWM0VroLI2oUS5H+DNmILvsk0O9T4912ASPkePnkThspNQ6boYbB1cnlr0EC10sXKT1Il0NBpGdVAAGvC9zHXty1dP41cPgsfjVkMq1K8cAcjXd2qBvXx7cBVyTWH6oodKYzLxVayRSTIe6ZTfLpE6ztLE6lmdjZOgwB7DseByNlr2bMHdnsxLFFBjCjn8O0m54bDwSyRqrqBIWMR2Qx23uOWmx00af1EaXpuCtElaCK+9B3MVeWV/WiMn2qe1wqrrQI9/GzvkgvSeWWKO134t7jz23nqTK8ldorBUtHvwToop2Ro+fA4EP9MLGV6gs461lRZWxiBahsyT/t+o7hRAT89qp3t763H5J3rd62smrleppksCCeLGUZo9SdrMI555GA87PhSPHJj6bV5MXTyuFmauXoXpO1a8XpRqkwWcBV2dKDIyjyf2eR/1R6Kjz9PI345Y0s/q2SsyyVY5iVAZl7GYbjbZP3D93yAeBE9R9K4uh1hgJppJpxcuWuwzW2iFb1SHKwFNdp7tkfJJ0W1rWp1Tag6PzNHGwtYlx9NaeQjV7Cs1dI5GilIDsGfuRtgKCSynx5HLZj+lq2Ux+KvnLZwkRrPCTeYle+PR863+yxHFKuHzeDwUHU0OKzHVGQsy+n61W8wsqpkPh1MbH7daDK38lG+B0Njb1XJUobdCeOetKNpIh2D8f8QR/LhxedK4/LdP9T49bFi1DTygsFsbNaNn03AEhlMhH/WMxbYX7fPyfPDgMznx1VlKuAVI0QfYjnOfWX6TlCs7wdI4iS8wOhausYoz+8IPuI/j28VOX+vf1AyLN6eWhoRk+Ep1UXX82DH/AB4HaWKwuKxD2GxWPp02sMHmNeJY/UIGgToeeSPOAB9Wevg3d/pZlN/766/u7eT2H+v31AxzL6uUr5CMf1LdVDv+adp/x4Hbd6rDepT1LUYkrzxtFIh9mVhoj+480LWCrWsfQrTSWGei8ckFj1P6VXQa7u75JGwfzDEH35znhf0pLCgLm+mY3Py9K0V/yuD/AO7lzx/6SvRVhV/FQZim/wA99YOB/NGP/DgO7hxVxfX36duoJzUqfualMP8Al5o5L9IroKopNexkbzfCwU2G/wCb9o4DbWnXW/JdESi08awtJ8lFLED+RZv7+Z+ctdSfpQ3JA0fTfT8UHwJr8vef49iaH+biuzv1j69zTH1+o7VaM/6ukFrqB/FR3f3ngd4xwQxSzSxRIkkxDSMq6LkAAEn58AD+XMvg/wD5z83p+o85YbusZrKyt+b3ZT/zc9V+qM/WYGvncvER8pdlH/NwP0eGgABoD8uV2bojp2WaSVsVAHkdnbsLKCxOydAgeSSecSY36s9e49lMHVWTfXxO6zD/ADg8uOH/AEkOt6RAvJisivz6tcxsf5oQP8OB1jjOk8Hi7yXKGOhhtIrIsg2SobW9bPzocOInCfpR037VznTdmH/akp2FlH/pYKf8eHA5b4cOHA+ojSOqRqzuxCqqjZJPgAD5PJCvgstYdkgxd6RljMrBa7+EHdtj48D7W8/2T+R5JfTnL0MB1vh8tl4pZadKb12SJQzMyqSmgfH7Xb/D3+ONjM/WTD3sljXqx5SrTSzG92MJHueGKElYj2hQQ0zv3D8vPz2gEmcLlRLFEcXf9WUuI0/DP3OV/aAGtnWxv8vnntsBmVcI2IyQcqXCmpJsqCATrt9gSBv8zxtdUfVfFZXr7p7OVI8hXr4mtdIUJ2s1iX1ChADexJQt/P31zfH1X6ciswS1585C1e1TlLQw9jW4oIAixzMZCSveGJA13d42PtJIJEYnJGz+HXH3TY9My+kK7l+wb23brfb4Pn28c9jCZVmjUYvIFpO3sArPt+7ZXXjzvtbX56P5ca+L+pOCfqPP3cnJk62Ov06lJKtKv2vqNAO9ZBIGi7X7mC7IYHR88sOU+sHSt969lBloJ40mPovVEqd5ryQxDYkXaoJn8ePB8Ee/AQkmJyUTQrLjrqGZmSINXceoV/aC+PJHzr2+eZLuCy9H1/xuLv1/w4JmMld1EYBAJY60PJA/idcZmT+ouMGQxdyjayk9vGYazWgnkh9JWtPH6UTCIOyp2IdFx+12jxyT6o+qeBy/0+HTSjJySyitHZuzRDvlVZllmY/d7se9tfJYe2uAn5sHloYJZpsVkI4YkWSSR6sgVEb9liSNAH4J56bAZlZfSbEZIS+PsNSTfkAjxr5BB/mOPUfXDDXZDHkq12Kv+sJJo/RgDhIO9exGVn+7a9zMPz0o0CeZMT9Z8DFjasV63nZrUEc1b8TJAHmkBCkTse/XeWQaXf2g+/jyHPFmCarPJBZikhnjbteORCrKfyIPkHmPk11nnW6k6nv5Zo2iWdlCIzd7KiIqIGb+s3ao2fk75C8A4cOHAOHDhwDhw4cA4cOHAOHDhwDhw4cA4cOHAOHDhwDhw4cD/9k=" alt="ㄟ進單了沒"></div>
             <div class="pod-text">
-              <div class="pod-num">02</div>
-              <h4>EP73｜比賺錢更重要的事 — 心靈自由</h4>
-              <span class="pod-link">在Apple播客收聽 ↗</span>
-            </div>
-          </div>
-        </a>
-        <a class="pod-card reveal" href="https://podcasts.apple.com/tw/podcast/54-frank-compoundwater-%E8%87%AA%E7%94%B1%E9%9D%88%E9%AD%82%E7%9A%84%E4%BB%A3%E5%83%B9/id1544225078?i=1000581324978" target="_blank" rel="noopener">
-          <div class="pod-cover">
-            <svg viewBox="0 0 400 120" preserveAspectRatio="none"><rect width="400" height="120" fill="#1c1c1c"/><g stroke="#9aa816" stroke-width="2" opacity="0.55"><line x1="10" y1="60" x2="10" y2="38"/><line x1="24" y1="60" x2="24" y2="82"/><line x1="38" y1="60" x2="38" y2="26"/><line x1="52" y1="60" x2="52" y2="88"/><line x1="66" y1="60" x2="66" y2="44"/><line x1="80" y1="60" x2="80" y2="72"/><line x1="94" y1="60" x2="94" y2="30"/><line x1="108" y1="60" x2="108" y2="90"/><line x1="122" y1="60" x2="122" y2="50"/><line x1="136" y1="60" x2="136" y2="60"/><line x1="150" y1="60" x2="150" y2="35"/><line x1="164" y1="60" x2="164" y2="92"/><line x1="178" y1="60" x2="178" y2="38"/><line x1="192" y1="60" x2="192" y2="74"/><line x1="206" y1="60" x2="206" y2="22"/><line x1="220" y1="60" x2="220" y2="96"/><line x1="234" y1="60" x2="234" y2="45"/><line x1="248" y1="60" x2="248" y2="58"/><line x1="262" y1="60" x2="262" y2="32"/><line x1="276" y1="60" x2="276" y2="82"/><line x1="290" y1="60" x2="290" y2="48"/><line x1="304" y1="60" x2="304" y2="66"/><line x1="318" y1="60" x2="318" y2="36"/><line x1="332" y1="60" x2="332" y2="92"/><line x1="346" y1="60" x2="346" y2="42"/><line x1="360" y1="60" x2="360" y2="70"/><line x1="374" y1="60" x2="374" y2="28"/><line x1="388" y1="60" x2="388" y2="84"/></g></svg>
-            <span class="show mono">電扶梯走左邊 with Jacky</span>
-          </div>
-          <div class="pod-body">
-            <div class="pod-thumb"><img src="data:image/jpeg;base64,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" alt="電扶梯走左邊 with Jacky"></div>
-            <div class="pod-text">
               <div class="pod-num">03</div>
-              <h4>EP54｜我們都是自由靈魂 :)</h4>
+              <h4>EP73｜比賺錢更重要的事 — 心靈自由</h4>
               <span class="pod-link">在Apple播客收聽 ↗</span>
             </div>
           </div>
@@ -639,11 +710,101 @@
     </div>
   </section>
 
+  <!-- TRADE JOURNAL -->
+  <section class="block" id="trades">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div class="section-num">05 / TRADE JOURNAL</div>
+        <h2 class="section-title">交易回顧</h2>
+        <p class="section-sub">從 100 萬到千萬、再到歸零重來的交易旅程，紀錄真實的漲跌與心態淬鍊。</p>
+      </div>
+
+      <div class="trade-timeline">
+
+        <div class="trade-item reveal">
+          <div class="trade-card">
+            <div class="trade-period">2025.07</div>
+            <h3 class="trade-highlight">幣安 8 週年交易賽 · 現貨排名 Top 10</h3>
+            <p>半個月「現貨 Spot」交易量衝上 <b style="color:var(--text)">1,000 萬+ 美金</b>，最終獲獎一台 MacBook Air。</p>
+            <div class="trade-links">
+              <a href="https://www.instagram.com/p/DMNadO_TOs2/" target="_blank" rel="noopener">查看紀錄 ↗</a>
+              <a href="https://www.threads.com/@compoundwater/post/DL6d2nuz-Wr" target="_blank" rel="noopener">交易量截圖 ↗</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="trade-item reveal">
+          <div class="trade-card">
+            <div class="trade-period">2019 – 2021</div>
+            <h3 class="trade-highlight">28 歲・資產從 &lt;100 萬 → 1,000 萬+ 台幣（ROI 900%+）</h3>
+            <p>兩年多的交易時間，個人資產從不到 100 萬台幣成長到 1,000 萬台幣以上。然而在 2021 年 519 與 2022 年 FTX 暴雷這兩次事件中，損失近 <b style="color:var(--text)">30 萬美金</b>。</p>
+            <div class="trade-links">
+              <a href="https://www.instagram.com/p/CPEImmRsK-C/" target="_blank" rel="noopener">交易時間軸紀錄 ↗</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="trade-item reveal">
+          <div class="trade-card">
+            <div class="trade-period">2023 – 2025</div>
+            <h3 class="trade-highlight">再戰！2–3 萬美金 → 3x 萬美金（兩年 ROI 1,000%+）</h3>
+            <p>用大約 2–3 萬美金重新開始交易，近兩年時間，在 2025 年底將資產翻到 3x 萬美金。然而在 2026 年 2 月 5 日比特幣暴跌至 5.9 萬美金時，即便僅用約 2 倍的低槓桿，仍損失近 <b style="color:var(--text)">30 萬美金</b>。</p>
+            <div class="trade-links">
+              <a href="https://www.instagram.com/p/DUYtxC3El4d/" target="_blank" rel="noopener">查看紀錄 ↗</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="trade-item reveal">
+          <div class="trade-card">
+            <div class="trade-period">2024</div>
+            <h3 class="trade-highlight">鏈上超額收益（On-chain Alpha）</h3>
+            <p>玩一些鏈上 DeFi 迷因幣交易，交易頻率低，主要鎖定鏈上交易量 &gt; 100 萬美金、市值 &lt; 1,000 萬美金的標的，並在上大型交易所前出場。</p>
+            <div class="trade-subgrid">
+              <div class="trade-sub"><span class="tag">#BOME</span><span class="val">4千 → 2萬（1天 5倍）</span></div>
+              <div class="trade-sub"><span class="tag">#SLERF</span><span class="val">4千 → 1.3萬（3hr 3倍）</span></div>
+              <div class="trade-sub"><span class="tag">#吉伊卡哇</span><span class="val">2千 → 4.3千（16hr 2倍）</span></div>
+            </div>
+            <div class="trade-links">
+              <a href="https://www.instagram.com/p/DBDfGwNz_5Z/" target="_blank" rel="noopener">查看紀錄 ↗</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="trade-item is-method trade-item-full reveal">
+          <div class="trade-card trade-strategy">
+            <div class="trade-period">METHODOLOGY</div>
+            <h3 class="trade-highlight">平時交易策略與方法</h3>
+            <p>老實說比較偏向盤感交易，但每次下判斷操作時，通常會參考當下的數據與市場情緒：</p>
+            <div class="strategy-grid">
+              <div class="strategy-item">
+                <span class="snum mono">01 / 量化指標</span>
+                <p>市場未平倉持倉量（OI）、資金費率、借貸利率、多空比、爆倉數據、期權痛點等</p>
+              </div>
+              <div class="strategy-item">
+                <span class="snum mono">02 / 基本面與宏觀</span>
+                <p>標普 500 指數歷史、聯準會利率、公司財務數據等</p>
+              </div>
+              <div class="strategy-item">
+                <span class="snum mono">03 / 事件驅動與技術面</span>
+                <p>消息面新聞、IEO、諧波與型態交易、市場恐慌情緒等</p>
+              </div>
+            </div>
+            <div class="trade-links">
+              <a href="https://compoundwater.notion.site/Some-Trading-Record-by-Frank-267f39ffe6e440e7b930e3275ef0b87c?pvs=74" target="_blank" rel="noopener">一些策略紀錄 ↗</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
   <!-- CONTACT -->
   <section class="block contact-block" id="contact" style="border-bottom:none;">
     <div class="wrap">
       <div class="section-head reveal" style="text-align:center;">
-        <div class="section-num" style="text-align:center;">05 / CONTACT</div>
+        <div class="section-num" style="text-align:center;">06 / CONTACT</div>
         <h2 class="section-title">Feel free to get in touch</h2>
         <p class="section-sub">歡迎合作提案、媒體邀約，或單純想聊聊：）</p>
       </div>
