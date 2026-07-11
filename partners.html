@@ -213,6 +213,74 @@
   }
   .btn:hover{box-shadow:0 8px 24px rgba(233,255,46,0.18);}
 
+  /* ---------- CHAT WIDGET ---------- */
+  .chat-widget{
+    max-width:400px;margin:32px 0 0;text-align:left;
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .chat-head{
+    display:flex;align-items:center;gap:10px;
+    padding:14px 20px;border-bottom:1px solid var(--line);background:var(--panel-2);
+  }
+  .chat-dot{width:7px;height:7px;border-radius:50%;background:var(--yellow);box-shadow:0 0 6px var(--yellow);flex-shrink:0;}
+  .chat-head span{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:0.03em;}
+  .chat-log{
+    height:220px;overflow-y:auto;padding:16px 18px;
+    display:flex;flex-direction:column;gap:12px;
+  }
+  .chat-msg{
+    max-width:82%;font-size:14px;line-height:1.7;padding:10px 14px;
+    border-radius:var(--radius);word-wrap:break-word;
+  }
+  .chat-msg.bot{
+    align-self:flex-start;background:var(--panel-2);border:1px solid var(--line);color:#d6d6ce;
+  }
+  .chat-msg.user{
+    align-self:flex-end;background:var(--yellow);color:var(--bg);font-weight:500;
+  }
+  .chat-msg.nudge{
+    align-self:center;background:transparent;border:1px dashed var(--line);
+    color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:12px;text-align:center;
+    max-width:100%;
+  }
+  .chat-msg.nudge a{color:var(--yellow-dim);}
+  .chat-msg.nudge a:hover{color:var(--yellow);}
+  .chat-typing{align-self:flex-start;display:flex;gap:4px;padding:12px 14px;}
+  .chat-typing span{
+    width:6px;height:6px;border-radius:50%;background:var(--muted);
+    animation:chatBlink 1.2s infinite ease-in-out;
+  }
+  .chat-typing span:nth-child(2){animation-delay:.2s;}
+  .chat-typing span:nth-child(3){animation-delay:.4s;}
+  @keyframes chatBlink{
+    0%, 80%, 100%{opacity:.25;}
+    40%{opacity:1;}
+  }
+  .chat-inputrow{
+    display:flex;gap:10px;padding:14px 16px;border-top:1px solid var(--line);
+  }
+  .chat-inputrow input{
+    flex:1;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);
+    color:var(--text);font-family:'Noto Sans TC','Space Grotesk',sans-serif;font-size:14px;
+    padding:10px 14px;outline:none;transition:border-color .15s;
+  }
+  .chat-inputrow input:focus{border-color:var(--yellow-dim);}
+  .chat-inputrow button{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;
+    background:var(--yellow);color:var(--bg);border:1px solid var(--yellow);
+    border-radius:var(--radius);padding:0 18px;cursor:pointer;flex-shrink:0;
+  }
+  .chat-inputrow button:disabled{opacity:0.4;cursor:not-allowed;}
+  .chat-note{
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--muted);
+    text-align:left;margin-top:12px;
+  }
+  @media (max-width:600px){
+    .chat-widget{margin-top:24px;}
+    .chat-log{height:260px;}
+  }
+
   footer{padding:48px 0;}
   .footer-inner{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:20px;}
   .copyright{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);}
@@ -379,6 +447,21 @@
         <div class="step"><span class="snum mono">✉</span><p><b>聯繫信箱</b> — nctu.frank@gmail.com</p></div>
         <div class="step"><span class="snum mono">TG</span><p><b>Telegram</b> — @frank3393</p></div>
       </div>
+
+      <div class="chat-widget">
+        <div class="chat-head">
+          <span class="chat-dot"></span>
+          <span>問問複水的網站小幫手</span>
+        </div>
+        <div class="chat-log" id="chatLog">
+          <div class="chat-msg bot">嗨，我是複水的網站小幫手 👋 想先聊聊合作方式、報價或任何問題都可以，來吧～</div>
+        </div>
+        <div class="chat-inputrow">
+          <input type="text" id="chatInput" placeholder="輸入訊息…" maxlength="300">
+          <button id="chatSend">送出</button>
+        </div>
+      </div>
+      <p class="chat-note">由 Gemini 驅動的小助手，回覆僅供參考，正式合作請透過 email 聯繫</p>
     </div>
   </section>
 
@@ -509,6 +592,98 @@
       navToggle.textContent = '☰';
     }));
   }
+
+  // ---------- CHAT WIDGET ----------
+  // Calls a serverless endpoint at /api/chat (see api/chat.js). The Gemini
+  // API key lives only in that backend function's environment variables.
+  (function initChatWidget(){
+    const log = document.getElementById('chatLog');
+    const input = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('chatSend');
+    if (!log || !input || !sendBtn) return;
+
+    let history = [];
+    let userTurns = 0;
+    let sending = false;
+
+    const MAX_HISTORY_SENT = 14;
+    const NUDGE_EVERY = 10;
+
+    function addBubble(text, role){
+      const div = document.createElement('div');
+      div.className = 'chat-msg ' + role;
+      div.textContent = text;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+      return div;
+    }
+
+    function addNudge(){
+      const div = document.createElement('div');
+      div.className = 'chat-msg nudge';
+      div.innerHTML = '聊得很開心！如果是正式合作或邀約，直接寄信給複水會更快 → <a href="mailto:nctu.frank@gmail.com">nctu.frank@gmail.com</a>';
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function showTyping(){
+      const div = document.createElement('div');
+      div.className = 'chat-typing';
+      div.id = 'chatTyping';
+      div.innerHTML = '<span></span><span></span><span></span>';
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function hideTyping(){
+      const el = document.getElementById('chatTyping');
+      if (el) el.remove();
+    }
+
+    async function sendMessage(){
+      const text = input.value.trim();
+      if (!text || sending) return;
+
+      sending = true;
+      sendBtn.disabled = true;
+      input.value = '';
+
+      addBubble(text, 'user');
+      history.push({ role: 'user', text });
+      userTurns++;
+
+      showTyping();
+
+      try {
+        const recent = history.slice(-MAX_HISTORY_SENT);
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: recent })
+        });
+        if (!res.ok) throw new Error('bad response');
+        const data = await res.json();
+        hideTyping();
+        addBubble(data.reply, 'bot');
+        history.push({ role: 'bot', text: data.reply });
+      } catch (err) {
+        hideTyping();
+        addBubble('小幫手暫時連不上線，可以先寄信給複水，或稍後再試一次～', 'bot');
+      }
+
+      if (userTurns % NUDGE_EVERY === 0) {
+        addNudge();
+      }
+
+      sending = false;
+      sendBtn.disabled = false;
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+  })();
 </script>
 
 </body>
