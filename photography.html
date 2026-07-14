@@ -423,8 +423,13 @@
     });
 
     // ---- drag / swipe (mouse + touch, via Pointer Events) ----
+    // Important: listen & capture on the STAGE (stable wrapper), not on the
+    // TRACK itself — capturing on an element whose own transform keeps
+    // changing mid-gesture is unreliable on iOS Safari and breaks after the
+    // first swipe.
     const stage = track.parentElement; // .carousel-stage
     let dragging = false;
+    let activePointerId = null;
     let dragStartX = 0;
     let dragDeltaPercent = 0;
 
@@ -435,23 +440,29 @@
     function onPointerDown(e){
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       dragging = true;
+      activePointerId = e.pointerId;
       dragDeltaPercent = 0;
       dragStartX = e.clientX;
       setTransition(false);
       stage.classList.add('dragging');
-      track.setPointerCapture(e.pointerId);
+      try { stage.setPointerCapture(e.pointerId); } catch (err) {}
     }
 
     function onPointerMove(e){
-      if (!dragging) return;
+      if (!dragging || e.pointerId !== activePointerId) return;
       const dx = e.clientX - dragStartX;
       dragDeltaPercent = (dx / stage.getBoundingClientRect().width) * 100;
       track.style.transform = 'translateX(calc(-' + (index * 100) + '% + ' + dragDeltaPercent + '%))';
     }
 
-    function onPointerUp(){
+    function endDrag(e){
       if (!dragging) return;
+      if (e && e.pointerId !== undefined && e.pointerId !== activePointerId) return;
       dragging = false;
+      if (e && e.pointerId !== undefined) {
+        try { stage.releasePointerCapture(e.pointerId); } catch (err) {}
+      }
+      activePointerId = null;
       stage.classList.remove('dragging');
       setTransition(true);
       const threshold = 12; // % of stage width needed to trigger a slide change
@@ -465,10 +476,11 @@
       dragDeltaPercent = 0;
     }
 
-    track.addEventListener('pointerdown', onPointerDown);
-    track.addEventListener('pointermove', onPointerMove);
-    track.addEventListener('pointerup', onPointerUp);
-    track.addEventListener('pointercancel', onPointerUp);
+    stage.addEventListener('pointerdown', onPointerDown);
+    stage.addEventListener('pointermove', onPointerMove);
+    stage.addEventListener('pointerup', endDrag);
+    stage.addEventListener('pointercancel', endDrag);
+    stage.addEventListener('pointerleave', endDrag);
 
     // prevent native image ghost-dragging
     track.addEventListener('dragstart', (e) => e.preventDefault());
