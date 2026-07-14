@@ -57,11 +57,14 @@ Matrixport、Amber、Max、Maicoin、BitoPro、Pionex、Mexc、Gate。
    AI 協助分析適合的資產配置框架。
 4. #WhoAreWe！H.H 花醬 x 複水 —— 2022 年起源於北京 Meta Space 咖啡廳的走心客製二創 mfers
    NFT 小專案，純好玩不收費、自由 donate，累積 55 位小夥伴的自畫像作品。
+5. #PHOTOGRAPHY BY LIN · Minnesota, 2015（photography.html）—— 2015 年在明尼蘇達大學雙城分校
+   交換學生時期，用底片記錄下探索世界的好奇與寧靜，是複水第一批完整保留下來的攝影作品，
+   網站上以輪播畫廊呈現，並附中英對照的創作說明。
 
 【播客訪談】曾受訪：科技職涯 Talent Connect（CakeResume）、#ㄟ進單了沒、電扶梯走左邊 with Jacky。
 
 【交易回顧重點】
-- 2025.07：幣安 8 週年交易賽現貨排名 Top 10，獲獎 MacBook Air。
+- 2025.07：幣安 8 週年交易賽現貨交易量排名 Top 10，獲獎 MacBook Air。
 - 2019–2021：28 歲時資產從不到 100 萬成長到 1000 萬+ 台幣（ROI 900%+），
   後在 2021 年 519 與 2022 年 FTX 暴雷兩次事件中虧損。
 - 2023–2025：重新用小額資金交易，兩年 ROI 1000%+，2026 年初比特幣暴跌時再度受挫。
