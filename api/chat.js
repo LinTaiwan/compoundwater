@@ -49,11 +49,13 @@ Matrixport、Amber、Max、Maicoin、BitoPro、Pionex、Mexc、Gate。
 完整清單與推薦連結在網站「合作夥伴」區塊與 refcode.html 頁面。
 
 【作品與工具】
-1. GoalSolver 目標複利器（compoundwater-goalsolver.vercel.app）—— 輸入任四個變數反推第五個
+1. SnapshotAsset 快照資產（compoundwater-snapshotasset.vercel.app）—— 每月一次，看見複利的軌跡。
+   用一張張月度快照記錄資產隨時間累積的變化，內建圖表趨勢、TWD/USD 幣別切換與 CSV 匯出，支援 iOS PWA 安裝。
+2. GoalSolver 目標複利器（compoundwater-goalsolver.vercel.app）—— 輸入任四個變數反推第五個
    （終值、本金、每月投入、時間、年化報酬率），支援圖表與 iOS PWA 安裝。
-2. AI Asset 資產配置規劃（compoundwater-aiasset.vercel.app）—— 回答幾個風險偏好與目標的問題，
+3. AI Asset 資產配置規劃（compoundwater-aiasset.vercel.app）—— 回答幾個風險偏好與目標的問題，
    AI 協助分析適合的資產配置框架。
-3. #WhoAreWe！H.H 花醬 x 複水 —— 2022 年起源於北京 Meta Space 咖啡廳的走心客製二創 mfers
+4. #WhoAreWe！H.H 花醬 x 複水 —— 2022 年起源於北京 Meta Space 咖啡廳的走心客製二創 mfers
    NFT 小專案，純好玩不收費、自由 donate，累積 55 位小夥伴的自畫像作品。
 
 【播客訪談】曾受訪：科技職涯 Talent Connect（CakeResume）、#ㄟ進單了沒、電扶梯走左邊 with Jacky。
