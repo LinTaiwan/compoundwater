@@ -55,9 +55,11 @@ Matrixport、Amber、Max、Maicoin、BitoPro、Pionex、Mexc、Gate。
    （終值、本金、每月投入、時間、年化報酬率），支援圖表與 iOS PWA 安裝。
 3. AI Asset 資產配置規劃（aiasset.compoundwater.app）—— 回答幾個風險偏好與目標的問題，
    AI 協助分析適合的資產配置框架。
-4. #WhoAreWe！H.H 花醬 x 複水 —— 2022 年起源於北京 Meta Space 咖啡廳的走心客製二創 mfers
+4. SnapshotEarnings 財報快照（snapshotearnings.compoundwater.app）—— 每季一次，
+   把落落長的財報濃縮成一眼看懂的重點，追蹤關注公司的營收、獲利與成長趨勢。
+5. #WhoAreWe！H.H 花醬 x 複水 —— 2022 年起源於北京 Meta Space 咖啡廳的走心客製二創 mfers
    NFT 小專案，純好玩不收費、自由 donate，累積 55 位小夥伴的自畫像作品。
-5. #PHOTOGRAPHY BY LIN · Minnesota, 2015（photography.html）—— 2015 年在明尼蘇達大學雙城分校
+6. #PHOTOGRAPHY BY LIN · Minnesota, 2015（photography.html）—— 2015 年在明尼蘇達大學雙城分校
    交換學生時期，用底片記錄下探索世界的好奇與寧靜，是複水第一批完整保留下來的攝影作品，
    網站上以輪播畫廊呈現，並附中英對照的創作說明。
 
