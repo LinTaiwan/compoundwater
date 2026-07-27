@@ -49,14 +49,14 @@ Matrixport、Amber、Max、Maicoin、BitoPro、Pionex、Mexc、Gate。
 完整清單與推薦連結在網站「合作夥伴」區塊與 refcode.html 頁面。
 
 【作品與工具】
-1. SnapshotAsset 快照資產（snapshotasset.compoundwater.app）—— 每月一次，看見複利的軌跡。
+1. SnapshotEarnings 財報快照（snapshotearnings.compoundwater.app）—— 數據視覺化，財報更清晰！
+   每季一次，把落落長的財報濃縮成一眼看懂的重點，追蹤關注公司的營收、獲利與成長趨勢。
+2. SnapshotAsset 快照資產（snapshotasset.compoundwater.app）—— 每月一次，看見複利的軌跡。
    用一張張月度快照記錄資產隨時間累積的變化，內建圖表趨勢、TWD/USD 幣別切換與 CSV 匯出，支援 iOS PWA 安裝。
-2. GoalSolver 目標複利器（goalsolver.compoundwater.app）—— 輸入任四個變數反推第五個
-   （終值、本金、每月投入、時間、年化報酬率），支援圖表與 iOS PWA 安裝。
 3. AI Asset 資產配置規劃（aiasset.compoundwater.app）—— 回答幾個風險偏好與目標的問題，
    AI 協助分析適合的資產配置框架。
-4. SnapshotEarnings 財報快照（snapshotearnings.compoundwater.app）—— 每季一次，
-   把落落長的財報濃縮成一眼看懂的重點，追蹤關注公司的營收、獲利與成長趨勢。
+4. GoalSolver 目標複利器（goalsolver.compoundwater.app）—— 輸入任四個變數反推第五個
+   （終值、本金、每月投入、時間、年化報酬率），支援圖表與 iOS PWA 安裝。
 5. #WhoAreWe！H.H 花醬 x 複水 —— 2022 年起源於北京 Meta Space 咖啡廳的走心客製二創 mfers
    NFT 小專案，純好玩不收費、自由 donate，累積 55 位小夥伴的自畫像作品。
 6. #PHOTOGRAPHY BY LIN · Minnesota, 2015（photography.html）—— 2015 年在明尼蘇達大學雙城分校
