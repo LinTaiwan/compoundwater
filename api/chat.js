@@ -49,10 +49,12 @@ Matrixport、Amber、Max、Maicoin、BitoPro、Pionex、Mexc、Gate。
 完整清單與推薦連結在網站「合作夥伴」區塊與 refcode.html 頁面。
 
 【作品與工具】
-1. SnapshotEarnings 財報快照（snapshotearnings.compoundwater.app）—— 數據視覺化，財報更清晰！
+1. SnapshotAsset 快照資產（snapshotasset.compoundwater.app）—— 每月一次，看見複利的軌跡。
+   用一張張月度快照記錄資產隨時間累積的變化，內建圖表趨勢、TWD/USD 幣別切換與 CSV 匯出。
+   除了網頁版，iOS 跟 Android 都有 App 可下載。
+2. SnapshotEarnings 財報快照（snapshotearnings.compoundwater.app）—— 數據視覺化，財報更清晰！
    每季一次，把落落長的財報濃縮成一眼看懂的重點，追蹤關注公司的營收、獲利與成長趨勢。
-2. SnapshotAsset 快照資產（snapshotasset.compoundwater.app）—— 每月一次，看見複利的軌跡。
-   用一張張月度快照記錄資產隨時間累積的變化，內建圖表趨勢、TWD/USD 幣別切換與 CSV 匯出，支援 iOS PWA 安裝。
+   除了網頁版，也有 iOS App 可下載（Android 版審核中，之後才會上架）。
 3. AI Asset 資產配置規劃（aiasset.compoundwater.app）—— 回答幾個風險偏好與目標的問題，
    AI 協助分析適合的資產配置框架。
 4. GoalSolver 目標複利器（goalsolver.compoundwater.app）—— 輸入任四個變數反推第五個
