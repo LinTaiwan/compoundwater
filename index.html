@@ -302,7 +302,11 @@
   .product-title-row .product-icon{width:60px;height:60px;border-radius:14px;flex-shrink:0;}
   .product-title-row .product-icon.icon-lg{width:84px;height:84px;border-radius:18px;}
   .product-title-row h3{flex:1;min-width:0;overflow-wrap:break-word;line-height:1.25;}
-  .product-card p{color:var(--muted);font-size:14.5px;line-height:1.8;margin:0 0 24px;}
+  .product-card p{
+    color:var(--muted);font-size:14.5px;line-height:1.8;margin:0 0 24px;
+    min-height:calc(14.5px * 1.8 * 4);
+    display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;
+  }
   .product-card .cli{margin-top:14px;}
   .store-badges{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap;}
   .store-badge{
