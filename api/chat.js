@@ -55,13 +55,15 @@ Matrixport、Amber、Max、Maicoin、BitoPro、Pionex、Mexc、Gate。
 2. SnapshotEarnings 財報快照（snapshotearnings.compoundwater.app）—— 把冗長的公開財報文件，
    即時自動整理成一頁必看數據的視覺化工具。
    除了網頁版，也有 iOS App 可下載（Android 版審核中，之後才會上架）。
-3. AI Asset 資產配置規劃（aiasset.compoundwater.app）—— 回答幾個風險偏好與目標的問題，
+3. SnapshotBooks 閱讀快照（snapshotbooks.compoundwater.app）—— 精華提煉．脈絡重現，
+   上傳書籍或長文後由 AI 萃取核心論點，保留原文脈絡與重點引用，濃縮成一頁好讀的摘要筆記。
+4. AI Asset 資產配置規劃（aiasset.compoundwater.app）—— 回答幾個風險偏好與目標的問題，
    AI 協助分析適合的資產配置框架。
-4. GoalSolver 目標複利器（goalsolver.compoundwater.app）—— 輸入任四個變數反推第五個
+5. GoalSolver 目標複利器（goalsolver.compoundwater.app）—— 輸入任四個變數反推第五個
    （終值、本金、每月投入、時間、年化報酬率），支援圖表與 iOS PWA 安裝。
-5. #WhoAreWe！H.H 花醬 x 複水 —— 2022 年起源於北京 Meta Space 咖啡廳的走心客製二創 mfers
+6. #WhoAreWe！H.H 花醬 x 複水 —— 2022 年起源於北京 Meta Space 咖啡廳的走心客製二創 mfers
    NFT 小專案，純好玩不收費、自由 donate，累積 55 位小夥伴的自畫像作品。
-6. #PHOTOGRAPHY BY LIN · Minnesota, 2015（photography.html）—— 2015 年在明尼蘇達大學雙城分校
+7. #PHOTOGRAPHY BY LIN · Minnesota, 2015（photography.html）—— 2015 年在明尼蘇達大學雙城分校
    交換學生時期，用底片記錄下探索世界的好奇與寧靜，是複水第一批完整保留下來的攝影作品，
    網站上以輪播畫廊呈現，並附中英對照的創作說明。
 
