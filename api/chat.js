@@ -56,7 +56,7 @@ Matrixport、Amber、Max、Maicoin、BitoPro、Pionex、Mexc、Gate。
    即時自動整理成一頁必看數據的視覺化工具。
    除了網頁版，也有 iOS App 可下載（Android 版審核中，之後才會上架）。
 3. SnapshotBooks 閱讀快照（snapshotbooks.compoundwater.app）—— 精華提煉．脈絡重現，
-   上傳書籍或長文後由 AI 萃取核心論點，保留原文脈絡與重點引用，濃縮成一頁好讀的摘要筆記。
+   經典書籍萃取核心論點，保留原文脈絡與重點引用，濃縮成一頁好讀的摘要筆記。
 4. AI Asset 資產配置規劃（aiasset.compoundwater.app）—— 回答幾個風險偏好與目標的問題，
    AI 協助分析適合的資產配置框架。
 5. GoalSolver 目標複利器（goalsolver.compoundwater.app）—— 輸入任四個變數反推第五個
