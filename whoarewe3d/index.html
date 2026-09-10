@@ -340,10 +340,13 @@ PARTS.forEach(z=>{
 });
 
 /* ---------------- 中央雕像：H.H 花醬 ---------------- */
-const STATUE = { r: 2.0, thick: .44, y: 3.05, baseR: 2.35, baseH: .9 };
+const STATUE = { y: 3.0, baseR: 2.35, baseH: .9 };   // y = 觀看時的視線高度
 
 function buildStatue(loader){
   const g = new THREE.Group();
+  const M = (c, o={}) => new THREE.MeshLambertMaterial(Object.assign({color:c}, o));
+  const C = { skin:0xfdf5ea, hair:0x8f5f3d, hat:0x141414, amber:0xf7b32b, cloth:0x15151a };
+
   const stone = new THREE.MeshLambertMaterial({
     map: canvasTex(256,256,(c,w,h)=>{
       c.fillStyle='#d8d3c7'; c.fillRect(0,0,w,h);
@@ -354,43 +357,64 @@ function buildStatue(loader){
     })
   });
 
-  // 地面圓形嵌線
+  /* ---- 地面嵌線 ＋ 石座 ---- */
   const inlay = new THREE.Mesh(new THREE.RingGeometry(STATUE.baseR+.5, STATUE.baseR+.78, 64),
     new THREE.MeshBasicMaterial({color:0x2e2c28, side:THREE.DoubleSide}));
   inlay.rotation.x = -Math.PI/2; inlay.position.y = .012; g.add(inlay);
 
-  // 石座（上下兩階）
   const base = new THREE.Mesh(new THREE.CylinderGeometry(STATUE.baseR, STATUE.baseR+.12, STATUE.baseH, 64), stone);
   base.position.y = STATUE.baseH/2; g.add(base);
   const step = new THREE.Mesh(new THREE.CylinderGeometry(STATUE.baseR-.45, STATUE.baseR-.3, .34, 64), stone);
   step.position.y = STATUE.baseH + .17; g.add(step);
 
-  // 頭像雕塑本體：立起來的圓盤，兩面都是花醬
-  const backMat = new THREE.MeshBasicMaterial({color:0xe6e1d6});
-  const tex = loader.load('hh.jpg', t => {
-    // 背面要等圖真的載進來才能 clone，否則 clone 到的是空的
-    const back = t.clone();
-    back.needsUpdate = true;
-    back.center.set(.5,.5); back.rotation = Math.PI/2;   // 背面鏡射回來，字才不會反
-    backMat.map = back; backMat.needsUpdate = true;
-  });
-  tex.encoding = THREE.sRGBEncoding;
-  tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-  tex.center.set(.5,.5); tex.rotation = Math.PI/2;   // 圓柱端面的 UV 是轉 90 度的
+  /* ---- 胸像：立體量體 ＋ 正面包上原圖 ---- */
+  const y0 = STATUE.baseH + .34;
+  const bust = new THREE.Group(); bust.position.y = y0; g.add(bust);
+  const add = (geo, mat, x, y, z) => {
+    const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); bust.add(m); return m;
+  };
 
-  const face = new THREE.MeshBasicMaterial({map:tex});
-  const rim  = new THREE.MeshLambertMaterial({color:0xcdc7ba});
-  const disc = new THREE.Mesh(
-    new THREE.CylinderGeometry(STATUE.r, STATUE.r, STATUE.thick, 72),
-    [rim, face, backMat]);
-  disc.rotation.x = Math.PI/2;            // 端面轉向 ±z
-  disc.position.y = STATUE.y; g.add(disc);
+  const HY = 2.05;                      // 頭部中心（相對石座頂）
 
-  // 頸柱，讓圓盤看起來是立在石座上
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(.42, .62, 1.1, 32), stone);
-  neck.position.y = STATUE.baseH + .5; g.add(neck);
+  // 身體、脖子、項鍊
+  add(new THREE.CylinderGeometry(1.05, 1.60, 1.15, 44), M(C.cloth), 0, .575, 0);
+  add(new THREE.CylinderGeometry(.40, .46, .55, 28), M(C.skin), 0, .80, 0);
+  const chain = add(new THREE.TorusGeometry(.52, .055, 10, 36), M(C.amber), 0, 1.02, .02);
+  chain.rotation.x = Math.PI/2;
 
-  // 石座正面銘牌
+  // 頭的量體：下半是頭髮、上半是帽子，兩顆球都比正面的弧面略小，只在側邊露出輪廓
+  const hairMass = add(new THREE.SphereGeometry(1.22, 48, 28), M(C.hair), 0, HY, -.02);
+  hairMass.scale.set(1.02, 1.06, .98);
+  const hatMass = add(new THREE.SphereGeometry(1.255, 48, 24, 0, Math.PI*2, 0, 1.02),
+                      M(C.hat, {emissive:0x080808}), 0, HY, -.02);
+  hatMass.rotation.x = -.08;
+
+  // 正面：把原圖包在弧面上（水平方向彎，跟臉一樣）
+  const headTex = loader.load('hh_head.png');
+  headTex.encoding = THREE.sRGBEncoding;
+  headTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  const SW = 2.62, R = 1.30;            // 弧面寬度與半徑
+  const face = add(
+    new THREE.CylinderGeometry(R, R, SW/1.168, 64, 1, true, -(SW/R)/2, SW/R),
+    new THREE.MeshLambertMaterial({map:headTex, transparent:true, alphaTest:.35,
+                                   side:THREE.DoubleSide}),
+    0, HY, 0);
+
+  // 胸前的 Hannah
+  const chestText = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.40, 1.40, .38, 40, 1, true, -0.70, 1.40),
+    new THREE.MeshBasicMaterial({
+      transparent:true, side:THREE.DoubleSide, depthWrite:false,
+      map: canvasTex(640,160,(c,w,h)=>{
+        c.clearRect(0,0,w,h);
+        c.fillStyle='#f7b32b'; c.textAlign='center';
+        c.font='700 88px "Noto Sans TC","PingFang TC",sans-serif';
+        c.fillText('Hannah', w/2, h/2+32);
+      })
+    }));
+  chestText.position.set(0, .42, 0); bust.add(chestText);
+
+  /* ---- 石座銘牌 ---- */
   const plate = new THREE.Mesh(new THREE.PlaneGeometry(1.7, .58), new THREE.MeshBasicMaterial({
     map: canvasTex(512,176,(c,w,h)=>{
       c.fillStyle='#1b1a1e'; c.fillRect(0,0,w,h);
@@ -403,16 +427,23 @@ function buildStatue(loader){
   }));
   plate.position.set(0, STATUE.baseH*.55, STATUE.baseR+.045); g.add(plate);
 
-  // 打在雕像上的光
+  /* ---- 打光 ---- */
   const glow = new THREE.Mesh(new THREE.PlaneGeometry(9, 9),
     new THREE.MeshBasicMaterial({map:glowTex, transparent:true,
       blending:THREE.AdditiveBlending, depthWrite:false}));
   glow.rotation.x = -Math.PI/2; glow.position.y = .02; g.add(glow);
-  const spot = new THREE.PointLight(0xfff2d8, .75, 16, 2);
-  spot.position.set(0, 6.2, 0); g.add(spot);
+
+  const key  = new THREE.PointLight(0xfff2d8, .70, 20, 2); key.position.set(2.4, 6.2, 4.0);  g.add(key);
+  const fill = new THREE.PointLight(0xcfe0ff, .35, 18, 2); fill.position.set(-3.2, 3.6, 3.0); g.add(fill);
+  const rim  = new THREE.PointLight(0xffe9c4, .35, 16, 2); rim.position.set(0, 4.4, -3.4);    g.add(rim);
+
+  // 點擊範圍（整尊都能點）
+  const hit = new THREE.Mesh(new THREE.SphereGeometry(2.3, 16, 12),
+    new THREE.MeshBasicMaterial({visible:false}));
+  hit.position.y = y0 + 1.7; g.add(hit);
 
   scene.add(g);
-  return disc;
+  return hit;
 }
 
 /* ---------------- 建立畫作 ---------------- */
@@ -434,10 +465,10 @@ manager.onLoad = ()=>{
   },350);
 };
 
-const statueDisc = buildStatue(loader);
-statueDisc.userData.id = 0; pickables.push(statueDisc);
-artworks.push({ id:0, group:statueDisc, slot:{x:0,y:STATUE.y-.35,z:0},
-                fwd:new THREE.Vector3(0,0,1), mesh:statueDisc, dist:9.5 });
+const statue = buildStatue(loader);
+statue.userData.id = 0; pickables.push(statue);
+artworks.push({ id:0, group:statue, slot:{x:0,y:STATUE.y,z:0},
+                fwd:new THREE.Vector3(0,0,1), mesh:statue, dist:10.5 });
 
 for(let n=1; n<=TOTAL && n<=slots.length; n++){
   const s = slots[n-1];
