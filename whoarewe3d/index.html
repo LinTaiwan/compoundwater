@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>#WhoAreWe — 3D 展場</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* CompoundWater 複水品牌色票 */
+    --bg:#0a0a0a; --panel:#141414; --panel-2:#1c1c1c; --line:#2a2a2a;
+    --yellow:#e9ff2e; --yellow-dim:#9aa816;
+    --ink:#f2f2ea; --dim:#8a8a83;
+    --radius:2px;              /* 銳角風格，不要改圓 */
+    --gold:var(--yellow);      /* 舊名沿用 */
+    --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+    --display:"Space Grotesk","Noto Sans TC",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  canvas{display:block}
+  #app{position:fixed;inset:0}
+
+  /* ---------- 載入 ---------- */
+  #loader{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;
+    flex-direction:column;align-items:center;justify-content:center;gap:22px;transition:opacity .8s}
+  #loader h1{font-family:var(--display);font-size:clamp(28px,6vw,54px);letter-spacing:.06em;font-weight:500}
+  #loader h1 b{color:var(--yellow);font-weight:700}
+  #bar{width:min(340px,70vw);height:2px;background:var(--line);overflow:hidden}
+  #bar i{display:block;height:100%;width:0%;background:var(--yellow);transition:width .3s;
+    box-shadow:0 0 12px rgba(233,255,46,.55)}
+  #pct{font-family:var(--mono);font-size:12px;letter-spacing:.3em;color:var(--dim)}
+
+  /* ---------- 序幕 ---------- */
+  #intro{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at 50% 42%,#151505 0%,var(--bg) 62%);text-align:center;padding:24px}
+  #intro .box{max-width:640px}
+  #intro .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.4em;color:var(--yellow);margin-bottom:18px}
+  #intro h2{font-family:var(--display);font-size:clamp(32px,7.5vw,64px);font-weight:500;letter-spacing:.01em;line-height:1.1}
+  #intro h2 b{color:var(--yellow)}
+  #intro h2 b{font-weight:700}
+  #intro p{margin-top:22px;font-size:15px;line-height:2;color:var(--dim)}
+  #intro .credit{font-family:var(--mono);margin-top:18px;font-size:12px;letter-spacing:.2em;color:var(--dim)}
+  .btn{margin-top:32px;display:inline-block;border:1px solid var(--yellow);color:var(--yellow);
+    background:transparent;padding:13px 34px;font-size:13px;letter-spacing:.28em;cursor:pointer;
+    transition:.25s;font-family:var(--mono);font-weight:500;border-radius:var(--radius)}
+  .btn:hover{background:var(--yellow);color:var(--bg);box-shadow:0 0 24px rgba(233,255,46,.3)}
+  .hint{font-family:var(--mono);margin-top:26px;font-size:11px;letter-spacing:.14em;
+    color:#5c5c56;line-height:2}
+
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;inset:0;z-index:20;pointer-events:none;display:none}
+  #brand{position:absolute;top:20px;left:24px;font-family:var(--mono);font-size:11px;
+    letter-spacing:.3em;color:var(--dim)}
+  #brand b{color:var(--yellow)}
+  #tools{position:absolute;top:16px;right:20px;display:flex;gap:8px;pointer-events:auto}
+  .tool{border:1px solid var(--line);background:rgba(20,20,20,.65);color:#b5b5ac;font-size:11px;
+    letter-spacing:.18em;padding:9px 15px;cursor:pointer;font-family:var(--mono);transition:.2s;
+    backdrop-filter:blur(6px);border-radius:var(--radius)}
+  .tool:hover{border-color:var(--yellow);color:var(--yellow)}
+  .tool.on{border-color:var(--yellow);color:var(--bg);background:var(--yellow)}
+  #crosshair{position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;
+    border-radius:50%;background:rgba(255,255,255,.55);transition:.2s}
+  #crosshair.hot{width:15px;height:15px;margin:-7.5px 0 0 -7.5px;background:transparent;
+    border:1px solid var(--yellow);box-shadow:0 0 10px rgba(233,255,46,.45)}
+  #tip{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);font-family:var(--mono);
+    font-size:11px;letter-spacing:.18em;color:#5c5c56;white-space:nowrap}
+
+  /* ---------- 作品說明 ---------- */
+  #card{position:fixed;z-index:30;right:0;top:0;height:100%;width:min(380px,84vw);
+    background:linear-gradient(180deg,rgba(20,20,20,.95),rgba(10,10,10,.97));
+    border-left:1px solid var(--line);backdrop-filter:blur(14px);
+    transform:translateX(105%);transition:transform .55s cubic-bezier(.2,.8,.2,1);
+    padding:44px 34px;display:flex;flex-direction:column;gap:18px;overflow-y:auto}
+  #card.show{transform:none}
+  #card .no{font-family:var(--mono);font-size:11px;letter-spacing:.35em;color:var(--yellow)}
+  #card h3{font-family:var(--display);font-size:26px;font-weight:600;letter-spacing:.01em}
+  #card .meta{font-family:var(--mono);font-size:12px;color:var(--dim);letter-spacing:.08em;
+    line-height:2.2;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:14px 0}
+  #card p{font-size:14px;line-height:2.1;color:#b5b5ac}
+  #card .series{font-size:13px;line-height:2.1;color:#7a7a73;
+    border-top:1px solid var(--line);padding-top:16px;white-space:pre-line}
+  #card .thumb{width:100%;aspect-ratio:1;object-fit:cover;border:1px solid var(--line);
+    border-radius:var(--radius)}
+  #card .nav{display:flex;gap:10px;margin-top:auto;padding-top:20px}
+  #card .nav button{flex:1;border:1px solid var(--line);background:none;color:#b5b5ac;padding:12px;
+    cursor:pointer;font-size:12px;letter-spacing:.16em;font-family:var(--mono);transition:.2s;
+    border-radius:var(--radius)}
+  #card .nav button:hover{border-color:var(--yellow);color:var(--yellow)}
+  #card .close{position:absolute;top:14px;right:18px;font-size:22px;color:#5c5c56;cursor:pointer;
+    background:none;border:none;font-family:inherit}
+  #card .close:hover{color:var(--yellow)}
+
+  /* ---------- 手機搖桿 ---------- */
+  #stick{position:fixed;left:22px;bottom:22px;width:108px;height:108px;border-radius:50%;
+    border:1px solid var(--line);background:rgba(20,20,20,.4);z-index:25;display:none;touch-action:none}
+  #stick i{position:absolute;left:50%;top:50%;width:42px;height:42px;margin:-21px 0 0 -21px;
+    border-radius:50%;background:rgba(233,255,46,.5)}
+  @media (max-width:820px){ #tip{display:none} #brand{font-size:9px} }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<div id="loader">
+  <h1>#<b>WhoAreWe</b></h1>
+  <div id="bar"><i></i></div>
+  <div id="pct">0%</div>
+</div>
+
+<div id="intro">
+  <div class="box">
+    <div class="kicker">H.H 花醬 × COMPOUNDWATER 複水</div>
+    <h2>#<b>WhoAreWe</b></h2>
+    <p>一支隨手畫的塗鴉，變成了一場關於「我們是誰」的自由創作實驗。<br>
+       免費創作、自願捐贈，走心客製二創致敬 #Mfers，<br>
+       也幫一位朋友踏出了她的 Web3 第一步。</p>
+    <p style="color:#6f6a61;font-size:13px">55 件作品 · 55 種對「我們是誰」的回答</p>
+    <button class="btn" id="enter">進 入 展 場</button>
+    <div class="hint">WASD / 方向鍵 移動　·　滑鼠 轉向　·　Shift 快走<br>
+      對準畫作 點擊 觀看　·　ESC 離開</div>
+  </div>
+</div>
+
+<div id="hud">
+  <div id="brand">#<b>WHOAREWE</b> — 55 WORKS</div>
+  <div id="tools">
+    <button class="tool" id="btnTour">自動導覽</button>
+    <button class="tool" id="btnList">作品索引</button>
+  </div>
+  <div id="crosshair"></div>
+  <div id="tip">WASD 移動 · 滑鼠轉向 · 對準畫作點擊</div>
+</div>
+
+<div id="card">
+  <button class="close" id="cardClose">×</button>
+  <div class="no" id="cNo"></div>
+  <h3 id="cTitle"></h3>
+  <img class="thumb" id="cImg" alt="">
+  <div class="meta" id="cMeta"></div>
+  <p id="cText"></p>
+  <p class="series" id="cSeries"></p>
+  <div class="nav">
+    <button id="cPrev">← 上一件</button>
+    <button id="cNext">下一件 →</button>
+  </div>
+</div>
+
+<div id="stick"><i></i></div>
+
+<script src="three.min.js"></script>
+<script>
+/* =========================================================================
+   #WhoAreWe — 3D 藝術展示空間
+   作品說明可在下方 CAPTIONS 直接編輯：{ 編號: {title, artist, text} }
+   ========================================================================= */
+const TOTAL = 55;
+const CAPTIONS = {
+   1: { title:"複水Frank", text:"畫面上方寫著「複水Frank」，戴著 CompoundWater 髮帶、圓框眼鏡，手邊一罐可口可樂。落款 CompoundWater × MFERs。" },
+   2: { title:"Mr.Cao M3", text:"背板大字「METASPACE」與 # 符號，叼著菸、戴彩色手環，手邊一杯 # 咖啡。" },
+   3: { title:"Mr.Huang.JN", text:"背板寫著「冗員」與一只時鐘，戴 M 字紅帽、掛著 Pepe 吊飾，手邊一杯 BTC 熱咖啡。" },
+   4: { title:"Mr.zh.ing", text:"背板大字「WAGMI-LIFE」，身邊一台 Leica 相機與兩隻貓。" },
+   5: { title:"ms.nabi", text:"背板寫著「Young soul」，髮帶上是被劃掉的 lucky 與 nabi，手邊一瓶威士忌與一顆愛心相框。" },
+   6: { title:"Mr.幣圈良心哥", text:"黑底綠字「UP UP UP」與燭線，角落寫著「respect / live more」，手邊一杯威士忌。" },
+   7: { title:"秘蔓", text:"背板是 etherscan 位址列與 Balance 1000E，戴著「$ HODL $」髮帶，手邊一本 How to DeFi。" },
+   8: { title:"Mr.KKKdash", text:"背板大字「LFG!!!」，耳機、墨鏡、手裏劍與武士刀，旁邊落款「ミアが派」。" },
+   9: { title:"Mr.4x", text:"背板寫著「Rich OG DJ 4x」，粉藍雙色髮、星星，手邊一台 DJ 唱盤。" },
+  10: { title:"Tina野蠻", text:"背板是十二星座盤，戴著 M 字帽、牛牛吊飾，手邊一張紅心 A。" },
+  11: { title:"Mr.kai", text:"滿版塗鴉字「Lazy happy hope drink milk tea peace love」，手邊一杯珍珠奶茶。" },
+  12: { title:"Miss Chen", text:"背板寫著「Follow / Like / RT」與「NGMI or GMI?」，格紋貝雷帽，手邊一台 ETH K 線機。" },
+  13: { title:"Mr.Jason", text:"背板寫著「I'm who I am」，黑色漁夫帽，手邊一張人與貓狗的合照。" },
+  14: { title:"Mr.明魚", text:"背板寫著「Luna Loves U」，花圈髮飾，手邊一張麻將六萬與一支牙刷。" },
+  15: { title:"Mr.Tuna∞", text:"背板大字「Ape in !!!」，髮帶寫「必月券当」，手邊 5KG 啞鈴與「RUN TO EARN」。" },
+  16: { title:"Mr.kasta", text:"黑底霓虹線條，帽子上寫「# happy water #」，兩罐可口可樂、遊戲手把與棒棒糖。" },
+  17: { title:"Mr.Peggy", text:"背板是傅立葉級數與 E=mc²，帽緣寫「to be or not to be / happy eat」，手邊一台電腦。" },
+  18: { title:"投機誘妹", text:"粉彩暈染背景與塗鴉小圖示，貓咪吊飾，手邊一本水彩筆記。" },
+  19: { title:"Mr.赤雲", text:"日式青海波背景，粉紅標題「寵妻狂魔・愛」，一瓶 Azuki 清酒與一隻黑貓。" },
+  20: { title:"色僧selao", text:"彩色線條背景，黑禮帽配單片眼鏡，手邊一隻橘貓面具。" },
+  21: { title:"Eddie good boy", text:"背板題字「禪語：食即是空 空即是色」與紅字「戒定慧」，竹子與芭蕉葉。" },
+  22: { title:"MMS", text:"全黑底霓虹字「make money smart」，列著 BTC / ETH / DOGE / LUNA 與上升箭頭。" },
+  23: { title:"Tedy", text:"紅綠條紋背景，FIFA 棒球帽、貓咪獎牌與一顆足球。" },
+  24: { title:"DihCoco", text:"跌勢 K 線背景，寫著「沒關係，很有錢」，帽子上「幣須送外賣」，旁邊一支 BNB Radio 麥克風。" },
+  25: { title:"JJ", text:"黑膠唱片背景寫著 love / punk / piano / music / BTC bachelor trader，手邊一台肩背式鍵盤。" },
+  26: { title:"QVFX", text:"背板大字「QUFOREX 梭哈致富」，笑得燦爛，旁邊一朵玫瑰、一個 TNT 箱與 QV 望遠鏡。" },
+  27: { title:"老雄（生日）", text:"背板寫著「happy birthday」，2022 皇冠與生日蛋糕，落款「老雄生日の二創」。" },
+  28: { title:"PSC.YS", text:"藍白斜紋背景寫滿祝福短句，美金符號墨鏡，手邊一支羽球拍。" },
+  29: { title:"白兔", text:"背板是刷痕大字 NICE，草帽配眼鏡，旁邊一把烏克麗麗與 web2.0 側背包。" },
+  30: { title:"Kuga", text:"漫天鈔票，頭巾寫著「I can do all things」，賽車格旗、指南針與方向盤。" },
+  31: { title:"紫菜蛋花湯", text:"藍色線稿背景寫著 queen / girlfriend / love love，手邊一杯啤酒與 cheers。" },
+  32: { title:"Miss 塔塔", text:"粉紅貓耳連帽衣與月亮，手邊一杯「情話集」飲料。" },
+  33: { title:"李琪", text:"秋天銀杏背景，護目鏡上寫著「重機女孩」，旁邊一隻小狗與一台相機。" },
+  34: { title:"tsucccg", text:"黑底霓虹塗鴉「cryptopunk」，鐵板燒紅燈籠與心電圖線條。" },
+  35: { title:"R JUN", text:"星空銀河背景，金色光環與星座圖，旁邊一隻黃金獵犬與魔杖。" },
+  36: { title:"hen._2e", text:"藍白圖騰背景，眼睛圖騰漁夫帽，手邊掛著「自由礦家」木牌。" },
+  37: { title:"老圖的幣圈小筆記", text:"紅底大字「宅浪」，日文「うれしい」與梅花，手邊一支霜淇淋。" },
+  38: { title:"Cryptospace", text:"橘藍煙霧背景，紫髮配墨鏡，BTC 與紅酒的發光圖示。" },
+  39: { title:"明然", text:"綠色線稿與藤蔓邊框，閉眼微笑，手邊一隻貓與一碗東西。" },
+  40: { title:"SliverBay 蜜罐包子", text:"背板大字「DEFI ₿」與紅字「躺賺」，蜂蜜罐與上升箭頭。" },
+  41: { title:"甘甘", text:"紅白格紋背景，橘色護目鏡，寫著「甘甘是冠軍!」，旁邊一座 F1 獎盃。" },
+  42: { title:"投資筆記_mv", text:"藍色海浪與棕櫚葉，手邊一杯西瓜汁，底線寫著 inv_3's touring car。" },
+  43: { title:"WJ", text:"齒輪與 HODL 圖案背景，圓框構圖，手邊一顆愛心。" },
+  44: { title:"開天闢地張宇噏", text:"星空與地球背景，寫著「世界等著你去闖！衝吧少年！」，手邊一個「不後悔」紅盒。" },
+  45: { title:"0xTodd", text:"背板寫著「NOTHING Research」，紅髮配金幣眼鏡，手邊一袋 ETH。" },
+  46: { title:"Shawn", text:"紅黃雙色花叢，蝴蝶與蜜蜂，寫著 LOVE / BUFF，叼著一朵花，旁邊一副場記板。" },
+  47: { title:"Scomg123", text:"黃底網點背景寫著「Soul Hunter」，藍髮，手邊一支大聲公。" },
+  48: { title:"Fredhsu.eth", text:"紅白格紋背景，帽子寫「Do it make it winner」，上衣「BANANACE COOL GUY」，旁邊一台小藍車。" },
+  49: { title:"Steward", text:"綠底塗鴉「to the moon」，飛行風鏡與紅框眼鏡，旁邊一顆籃球與一顆鑽石。" },
+  50: { title:"0xVaVa", text:"橘色磚牆與餅乾，其中一塊寫著「cogito ergo sum」，旁邊一支羽毛筆。" },
+  51: { title:"Rio", text:"綠底玫瑰花牆，粉紅長髮配金框眼鏡，比出雙手手勢。" },
+  52: { title:"小村姑", text:"粉紅梅花背景寫著「happy」，桃子造型連帽衣，抱著一片西瓜，旁邊一隻小太陽。" },
+  53: { title:"小蕨", text:"淺綠背景飄著壽司，青蛙造型工地帽，手邊一支柺杖。" },
+  54: { title:"twood BNBETH", text:"綠字「DEFI-N」背景，紅色耳罩式耳機，青蛙吊飾與一支麥克風。" },
+  55: { title:"mizu🌱", text:"藍天塗鴉背景，帽子寫著「Believe in yourself」，手邊一片 BTC 餅乾。" },
+};
+const DEFAULT_TEXT =
+  "「我們是誰？」— 這件作品是 #WhoAreWe 系列的其中一種回答。\n" +
+  "整個系列始於一支隨手畫的塗鴉，最後成為 55 件走心客製的二創致敬。免費畫、自由 donate，純粹好玩。";
+
+/* ---------------- 基本場景 ---------------- */
+const app = document.getElementById('app');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0a0a);
+scene.fog = new THREE.Fog(0x0a0a0a, 26, 82);
+
+const camera = new THREE.PerspectiveCamera(62, innerWidth/innerHeight, 0.1, 300);
+camera.position.set(0, 1.65, 27);
+
+const renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputEncoding = THREE.sRGBEncoding;
+app.appendChild(renderer.domElement);
+
+/* ---------------- 材質貼圖（程序生成） ---------------- */
+function canvasTex(w,h,draw,rep){
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  draw(c.getContext('2d'),w,h);
+  const t=new THREE.CanvasTexture(c);
+  t.wrapS=t.wrapT=THREE.RepeatWrapping;
+  if(rep) t.repeat.set(rep[0],rep[1]);
+  return t;
+}
+// 磨石子地板
+const floorTex = canvasTex(512,512,(g,w,h)=>{
+  g.fillStyle='#141317'; g.fillRect(0,0,w,h);
+  for(let i=0;i<2600;i++){
+    const x=Math.random()*w,y=Math.random()*h,r=Math.random()*2.6+.4;
+    g.fillStyle=`rgba(${180+Math.random()*60},${172+Math.random()*60},${160+Math.random()*60},${Math.random()*.12+.03})`;
+    g.beginPath(); g.arc(x,y,r,0,7); g.fill();
+  }
+  const grd=g.createLinearGradient(0,0,w,h);
+  grd.addColorStop(0,'rgba(255,255,255,.03)'); grd.addColorStop(1,'rgba(0,0,0,.12)');
+  g.fillStyle=grd; g.fillRect(0,0,w,h);
+},[14,22]);
+// 微紋理牆面
+const wallTex = canvasTex(256,256,(g,w,h)=>{
+  g.fillStyle='#1d1c20'; g.fillRect(0,0,w,h);
+  for(let i=0;i<9000;i++){
+    g.fillStyle=`rgba(255,255,255,${Math.random()*.022})`;
+    g.fillRect(Math.random()*w,Math.random()*h,1,1);
+  }
+},[5,2]);
+// 燈光暈染（畫作背後的洗牆光）
+const glowTex = canvasTex(128,128,(g,w,h)=>{
+  const gr=g.createRadialGradient(w/2,h*0.42,4,w/2,h*0.42,w/2);
+  gr.addColorStop(0,'rgba(255,244,220,.42)');
+  gr.addColorStop(.45,'rgba(255,238,205,.16)');
+  gr.addColorStop(1,'rgba(255,238,205,0)');
+  g.fillStyle=gr; g.fillRect(0,0,w,h);
+});
+
+/* ---------------- 空間結構 ---------------- */
+const HX = 20, HZ = 32, WH = 7;           // 半寬 / 半深 / 牆高
+const wallMat  = new THREE.MeshLambertMaterial({map:wallTex, color:0xcfc9bd});
+const floorMat = new THREE.MeshStandardMaterial({
+  map:floorTex, color:0xffffff, roughness:.34, metalness:.25,
+  transparent:true, opacity:.94
+});
+
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(HX*2, HZ*2), floorMat);
+floor.rotation.x = -Math.PI/2; scene.add(floor);
+
+const ceil = new THREE.Mesh(new THREE.PlaneGeometry(HX*2, HZ*2),
+  new THREE.MeshLambertMaterial({color:0x121116}));
+ceil.rotation.x = Math.PI/2; ceil.position.y = WH; scene.add(ceil);
+
+function wall(w,h,d,x,y,z,ry){
+  const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), wallMat);
+  m.position.set(x,y,z); if(ry) m.rotation.y=ry; scene.add(m); return m;
+}
+wall(.6, WH, HZ*2, -HX, WH/2, 0);         // 左
+wall(.6, WH, HZ*2,  HX, WH/2, 0);         // 右
+wall(HX*2, WH, .6, 0, WH/2, -HZ);         // 後
+wall(HX*2, WH, .6, 0, WH/2,  HZ);         // 前
+
+// 中央三道獨立展牆
+const PARTS = [-16, 0, 16];
+const PW = 13, PT = 0.7, PH = 5.2;
+PARTS.forEach(z => wall(PW, PH, PT, 0, PH/2, z));
+
+// 天花板燈槽
+for(const z of [-24,-8,8,24]){
+  for(const x of [-10,10]){
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(6,.12,.4),
+      new THREE.MeshBasicMaterial({color:0xfff2d4}));
+    bar.position.set(x, WH-.12, z); scene.add(bar);
+  }
+}
+
+/* ---------------- 燈光 ---------------- */
+scene.add(new THREE.AmbientLight(0xfff3e2, .52));
+scene.add(new THREE.HemisphereLight(0xbfd6ff, 0x1a1712, .35));
+for(const z of [-26,-13,0,13,26]){
+  const p = new THREE.PointLight(0xffe9c4, .5, 34, 2);
+  p.position.set(0, WH-1.2, z); scene.add(p);
+}
+
+/* ---------------- 畫作掛點 ---------------- */
+const slots = [];
+const push = (x,y,z,ry) => slots.push({x,y,z,ry});
+const HY = 2.45;                                  // 畫心高度
+
+// 左牆（由前往後）
+for(let i=0;i<13;i++) push(-HX+0.36, HY, 27 - i*4.6,  Math.PI/2);
+// 後牆
+for(let i=0;i<7;i++)  push(-15 + i*5, HY, -HZ+0.36,   0);
+// 右牆（由後往前）
+for(let i=0;i<13;i++) push(HX-0.36, HY, -27 + i*4.6, -Math.PI/2);
+// 前牆
+for(let i=0;i<6;i++)  push(-14.5 + i*5.8, HY, HZ-0.36, Math.PI);
+// 中央展牆（前後兩面各 3 幅）
+const PHY = 2.15;
+PARTS.forEach(z=>{
+  for(const x of [-4.2, 0, 4.2]) push(x, PHY, z + PT/2 + .08, 0);
+  for(const x of [ 4.2, 0,-4.2]) push(x, PHY, z - PT/2 - .08, Math.PI);
+});
+
+/* ---------------- 建立畫作 ---------------- */
+const SIZE = 2.55, FRAME = .13, DEPTH = .1;
+const frameMat = new THREE.MeshLambertMaterial({color:0x16151a});
+const matMat   = new THREE.MeshLambertMaterial({color:0xf4efe4});
+const artworks = [], pickables = [];
+
+const manager = new THREE.LoadingManager();
+const loader  = new THREE.TextureLoader(manager);
+const barI = document.querySelector('#bar i'), pctEl = document.getElementById('pct');
+manager.onProgress = (u,l,t)=>{ const p=Math.round(l/t*100); barI.style.width=p+'%'; pctEl.textContent=p+'%'; };
+manager.onLoad = ()=>{
+  barI.style.width='100%'; pctEl.textContent='100%';
+  setTimeout(()=>{
+    const ld=document.getElementById('loader');
+    ld.style.opacity=0; setTimeout(()=>ld.style.display='none',800);
+    document.getElementById('intro').style.display='flex';
+  },350);
+};
+
+for(let n=1; n<=TOTAL && n<=slots.length; n++){
+  const s = slots[n-1];
+  const g = new THREE.Group();
+  g.position.set(s.x, s.y, s.z); g.rotation.y = s.ry;
+
+  // 洗牆光
+  const glow = new THREE.Mesh(new THREE.PlaneGeometry(SIZE*2.7, SIZE*2.9),
+    new THREE.MeshBasicMaterial({map:glowTex, transparent:true,
+      blending:THREE.AdditiveBlending, depthWrite:false}));
+  glow.position.set(0, .25, -0.02); g.add(glow);
+
+  // 外框 + 卡紙
+  const outer = SIZE + FRAME*2 + .34;
+  const fr = new THREE.Mesh(new THREE.BoxGeometry(outer, outer, DEPTH), frameMat);
+  fr.position.z = .04; g.add(fr);
+  const mt = new THREE.Mesh(new THREE.PlaneGeometry(SIZE + .3, SIZE + .3), matMat);
+  mt.position.z = .092; g.add(mt);
+
+  // 畫心
+  const tex = loader.load(`img/${n}.jpg`);
+  tex.encoding = THREE.sRGBEncoding;
+  tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  const art = new THREE.Mesh(new THREE.PlaneGeometry(SIZE, SIZE),
+    new THREE.MeshBasicMaterial({map:tex}));
+  art.position.z = .095; g.add(art);
+  art.userData.id = n; pickables.push(art);
+
+  // 標籤
+  const lab = new THREE.Mesh(new THREE.PlaneGeometry(.52,.26), new THREE.MeshBasicMaterial({
+    map: canvasTex(128,64,(c,w,h)=>{
+      c.fillStyle='#efe9dd'; c.fillRect(0,0,w,h);
+      c.fillStyle='#1b1a1e'; c.font='500 26px "IBM Plex Mono",Menlo,monospace'; c.textAlign='center';
+      c.fillText('#'+n, w/2, h/2+9);
+    })
+  }));
+  lab.position.set(-(outer/2)+.34, -(outer/2)-.34, .06); g.add(lab);
+
+  // 地面倒影
+  const ref = new THREE.Mesh(new THREE.PlaneGeometry(SIZE, SIZE),
+    new THREE.MeshBasicMaterial({map:tex, transparent:true, opacity:.1, depthWrite:false}));
+  ref.position.set(0, -s.y*2, .1); ref.scale.y = -1; g.add(ref);
+
+  scene.add(g);
+  const fwd = new THREE.Vector3(0,0,1).applyEuler(new THREE.Euler(0,s.ry,0));
+  artworks.push({ id:n, group:g, slot:s, fwd, mesh:art });
+}
+
+/* ---------------- 第一人稱控制 ---------------- */
+const player = {
+  pos: new THREE.Vector3(0, 1.65, 27),
+  yaw: 0, pitch: 0, vel: new THREE.Vector3()
+};
+const keys = {};
+addEventListener('keydown', e=>{
+  keys[e.code]=true;
+  if(e.code==='Escape') exitFocus();
+});
+addEventListener('keyup', e=>keys[e.code]=false);
+
+let locked = false;
+renderer.domElement.addEventListener('click', onClick);
+document.addEventListener('pointerlockchange', ()=>{
+  locked = document.pointerLockElement === renderer.domElement;
+});
+document.addEventListener('mousemove', e=>{
+  if(!locked || focus) return;
+  player.yaw   -= e.movementX * .0022;
+  player.pitch -= e.movementY * .0022;
+  player.pitch = Math.max(-1.2, Math.min(1.2, player.pitch));
+});
+
+// 觸控：拖曳轉向 + 左下搖桿
+let touchLook = null, stickVec = {x:0,y:0};
+const stick = document.getElementById('stick'), knob = stick.querySelector('i');
+if(matchMedia('(pointer:coarse)').matches){
+  stick.style.display='block';
+  document.getElementById('tip').style.display='none';
+  let sid=null;
+  stick.addEventListener('touchstart', e=>{ sid=e.changedTouches[0].identifier; e.preventDefault(); },{passive:false});
+  stick.addEventListener('touchmove', e=>{
+    for(const t of e.changedTouches){ if(t.identifier!==sid) continue;
+      const r=stick.getBoundingClientRect();
+      let dx=t.clientX-(r.left+r.width/2), dy=t.clientY-(r.top+r.height/2);
+      const m=Math.min(Math.hypot(dx,dy),44), a=Math.atan2(dy,dx);
+      dx=Math.cos(a)*m; dy=Math.sin(a)*m;
+      knob.style.transform=`translate(${dx}px,${dy}px)`;
+      stickVec={x:dx/44, y:dy/44};
+    }
+    e.preventDefault();
+  },{passive:false});
+  const end=()=>{ sid=null; stickVec={x:0,y:0}; knob.style.transform=''; };
+  stick.addEventListener('touchend',end); stick.addEventListener('touchcancel',end);
+
+  renderer.domElement.addEventListener('touchstart', e=>{
+    const t=e.changedTouches[0]; touchLook={id:t.identifier,x:t.clientX,y:t.clientY,moved:0};
+  });
+  renderer.domElement.addEventListener('touchmove', e=>{
+    if(!touchLook||focus) return;
+    for(const t of e.changedTouches){ if(t.identifier!==touchLook.id) continue;
+      const dx=t.clientX-touchLook.x, dy=t.clientY-touchLook.y;
+      touchLook.moved += Math.abs(dx)+Math.abs(dy);
+      player.yaw -= dx*.005; player.pitch = Math.max(-1.2,Math.min(1.2, player.pitch - dy*.005));
+      touchLook.x=t.clientX; touchLook.y=t.clientY;
+    }
+  });
+  renderer.domElement.addEventListener('touchend', e=>{
+    if(touchLook && touchLook.moved < 12) pickAt(touchLook.x, touchLook.y);
+    touchLook=null;
+  });
+}
+
+/* ---------------- 碰撞 ---------------- */
+function collide(p){
+  const r = .55;
+  p.x = Math.max(-HX+r+.3, Math.min(HX-r-.3, p.x));
+  p.z = Math.max(-HZ+r+.3, Math.min(HZ-r-.3, p.z));
+  for(const pz of PARTS){
+    const dz = p.z - pz;
+    if(Math.abs(dz) < PT/2 + r && Math.abs(p.x) < PW/2 + r){
+      // 推出：比較 x / z 的穿透深度
+      const penZ = (PT/2 + r) - Math.abs(dz);
+      const penX = (PW/2 + r) - Math.abs(p.x);
+      if(penZ < penX) p.z = pz + Math.sign(dz||1)*(PT/2 + r);
+      else p.x = Math.sign(p.x||1)*(PW/2 + r);
+    }
+  }
+  return p;
+}
+
+/* ---------------- 聚焦觀看 ---------------- */
+let focus = null, camAnim = null;
+const card = document.getElementById('card');
+
+function focusOn(id){
+  const a = artworks.find(w=>w.id===id); if(!a) return;
+  focus = a;
+  const target = new THREE.Vector3(a.slot.x, a.slot.y, a.slot.z)
+    .add(a.fwd.clone().multiplyScalar(3.8));
+  target.y = a.slot.y - .05;
+  let look = Math.atan2(a.fwd.x, a.fwd.z);
+  // 說明面板佔據右側時，把畫作往畫面左邊挪，避免被蓋住
+  const panelW = Math.min(380, innerWidth*0.84);
+  if(innerWidth > 820){
+    const hfov = 2*Math.atan(Math.tan(camera.fov*Math.PI/360)*camera.aspect);
+    look -= (panelW/innerWidth)/2 * hfov;
+  }
+  camAnim = { from:player.pos.clone(), to:target, fy:player.yaw,
+              ty:shortAngle(player.yaw, look), fp:player.pitch, tp:0, t:0 };
+  showCard(a);
+  if(document.pointerLockElement) document.exitPointerLock();
+}
+function shortAngle(from, to){
+  let d = (to - from) % (Math.PI*2);
+  if(d >  Math.PI) d -= Math.PI*2;
+  if(d < -Math.PI) d += Math.PI*2;
+  return from + d;
+}
+function exitFocus(){
+  if(!focus) return;
+  focus = null; camAnim = null; card.classList.remove('show');
+  tour = false; document.getElementById('btnTour').classList.remove('on');
+}
+function showCard(a){
+  const c = CAPTIONS[a.id] || {};
+  document.getElementById('cNo').textContent = `NO. ${String(a.id).padStart(2,'0')} / ${TOTAL}`;
+  document.getElementById('cTitle').textContent = c.title || `#WhoAreWe ${a.id}`;
+  document.getElementById('cImg').src = `img/${a.id}.jpg`;
+  document.getElementById('cMeta').innerHTML =
+    `藝術家　${c.artist || 'H.H 花醬'}<br>系列　　#WhoAreWe · 55 件<br>出品　　CompoundWater 複水<br>媒材　　數位繪畫 · PFP`;
+  document.getElementById('cText').textContent = c.text || '';
+  document.getElementById('cText').hidden = !c.text;
+  document.getElementById('cSeries').textContent = DEFAULT_TEXT;
+  card.classList.add('show');
+}
+document.getElementById('cardClose').onclick = exitFocus;
+document.getElementById('cPrev').onclick = ()=> focusOn(focus ? (focus.id>1?focus.id-1:TOTAL) : 1);
+document.getElementById('cNext').onclick = ()=> focusOn(focus ? (focus.id<TOTAL?focus.id+1:1) : 1);
+
+/* ---------------- 點擊拾取 ---------------- */
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+function pickAt(cx, cy){
+  ndc.x = (cx/innerWidth)*2 - 1; ndc.y = -(cy/innerHeight)*2 + 1;
+  ray.setFromCamera(ndc, camera);
+  const hit = ray.intersectObjects(pickables)[0];
+  if(hit) focusOn(hit.object.userData.id);
+}
+function lockPointer(){
+  try{ const r = renderer.domElement.requestPointerLock(); if(r && r.catch) r.catch(()=>{}); }catch(_){}
+}
+function onClick(e){
+  if(focus){ exitFocus(); return; }
+  if(locked){
+    ndc.set(0,0); ray.setFromCamera(ndc, camera);
+    const hit = ray.intersectObjects(pickables)[0];
+    if(hit && hit.distance < 16) focusOn(hit.object.userData.id);
+    return;
+  }
+  if(!matchMedia('(pointer:coarse)').matches) lockPointer();
+}
+
+/* ---------------- 自動導覽 / 索引 ---------------- */
+let tour = false, tourIdx = 0, tourT = 0;
+document.getElementById('btnTour').onclick = function(){
+  tour = !tour; this.classList.toggle('on', tour);
+  if(tour){ tourIdx = focus ? focus.id : 1; tourT = 0; focusOn(tourIdx); }
+  else exitFocus();
+};
+document.getElementById('btnList').onclick = ()=>{
+  const n = prompt(`跳到第幾件作品？（1 – ${TOTAL}）`, focus ? focus.id : 1);
+  const v = parseInt(n,10);
+  if(v>=1 && v<=TOTAL) focusOn(v);
+};
+
+/* ---------------- 進場 ---------------- */
+document.getElementById('enter').onclick = ()=>{
+  document.getElementById('intro').style.display='none';
+  document.getElementById('hud').style.display='block';
+  if(!matchMedia('(pointer:coarse)').matches) lockPointer();
+};
+
+/* ---------------- 主迴圈 ---------------- */
+const cross = document.getElementById('crosshair');
+const clock = new THREE.Clock();
+let bob = 0;
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), .05);
+
+  if(camAnim){
+    camAnim.t = Math.min(1, camAnim.t + dt*1.6);
+    const e = 1 - Math.pow(1 - camAnim.t, 3);
+    player.pos.lerpVectors(camAnim.from, camAnim.to, e);
+    player.yaw   = camAnim.fy + (camAnim.ty - camAnim.fy)*e;
+    player.pitch = camAnim.fp + (camAnim.tp - camAnim.fp)*e;
+    if(camAnim.t >= 1) camAnim = null;
+  } else if(!focus){
+    const speed = (keys.ShiftLeft||keys.ShiftRight ? 9.5 : 5.2);
+    let f = 0, s = 0;
+    if(keys.KeyW||keys.ArrowUp)    f += 1;
+    if(keys.KeyS||keys.ArrowDown)  f -= 1;
+    if(keys.KeyA||keys.ArrowLeft)  s -= 1;
+    if(keys.KeyD||keys.ArrowRight) s += 1;
+    f -= stickVec.y; s += stickVec.x;
+    const len = Math.hypot(f,s);
+    if(len > 0){
+      f/=len; s/=len;
+      const sin = Math.sin(player.yaw), cos = Math.cos(player.yaw);
+      player.vel.x += (-sin*f + cos*s) * speed;
+      player.vel.z += (-cos*f - sin*s) * speed;
+      bob += dt * speed * 1.5;
+    }
+    player.vel.multiplyScalar(Math.pow(.0016, dt));
+    player.pos.x += player.vel.x * dt;
+    player.pos.z += player.vel.z * dt;
+    collide(player.pos);
+    player.pos.y = 1.65 + Math.sin(bob)*.022;
+  }
+
+  camera.position.copy(player.pos);
+  camera.rotation.set(player.pitch, player.yaw, 0, 'YXZ');
+
+  // 準星命中提示
+  if(!focus && locked){
+    ndc.set(0,0); ray.setFromCamera(ndc, camera);
+    const hit = ray.intersectObjects(pickables)[0];
+    cross.classList.toggle('hot', !!(hit && hit.distance < 16));
+  } else cross.classList.remove('hot');
+
+  // 自動導覽
+  if(tour && !camAnim){
+    tourT += dt;
+    if(tourT > 5.5){ tourT = 0; tourIdx = tourIdx < TOTAL ? tourIdx+1 : 1; focusOn(tourIdx); }
+  }
+
+  renderer.render(scene, camera);
+}
+animate();
+
+addEventListener('resize', ()=>{
+  camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>
