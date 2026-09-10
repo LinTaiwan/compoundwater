@@ -298,8 +298,8 @@ wall(HX*2, WH, .6, 0, WH/2, -HZ);         // 後
 wall(HX*2, WH, .6, 0, WH/2,  HZ);         // 前
 
 // 中央三道獨立展牆
-const PARTS = [-16, 0, 16];
-const PW = 13, PT = 0.7, PH = 5.2;
+const PARTS = [-16, 16];          // 中央留給花醬雕像
+const PW = 15, PT = 0.7, PH = 5.2;
 PARTS.forEach(z => wall(PW, PH, PT, 0, PH/2, z));
 
 // 天花板燈槽
@@ -335,9 +335,85 @@ for(let i=0;i<6;i++)  push(-14.5 + i*5.8, HY, HZ-0.36, Math.PI);
 // 中央展牆（前後兩面各 3 幅）
 const PHY = 2.15;
 PARTS.forEach(z=>{
-  for(const x of [-4.2, 0, 4.2]) push(x, PHY, z + PT/2 + .08, 0);
-  for(const x of [ 4.2, 0,-4.2]) push(x, PHY, z - PT/2 - .08, Math.PI);
+  for(const x of [-5.25,-1.75, 1.75, 5.25]) push(x, PHY, z + PT/2 + .08, 0);
+  for(const x of [ 5.25, 1.75,-1.75,-5.25]) push(x, PHY, z - PT/2 - .08, Math.PI);
 });
+
+/* ---------------- 中央雕像：H.H 花醬 ---------------- */
+const STATUE = { r: 2.0, thick: .44, y: 3.05, baseR: 2.35, baseH: .9 };
+
+function buildStatue(loader){
+  const g = new THREE.Group();
+  const stone = new THREE.MeshLambertMaterial({
+    map: canvasTex(256,256,(c,w,h)=>{
+      c.fillStyle='#d8d3c7'; c.fillRect(0,0,w,h);
+      for(let i=0;i<7000;i++){
+        c.fillStyle=`rgba(0,0,0,${Math.random()*.05})`;
+        c.fillRect(Math.random()*w,Math.random()*h,1,1);
+      }
+    })
+  });
+
+  // 地面圓形嵌線
+  const inlay = new THREE.Mesh(new THREE.RingGeometry(STATUE.baseR+.5, STATUE.baseR+.78, 64),
+    new THREE.MeshBasicMaterial({color:0x2e2c28, side:THREE.DoubleSide}));
+  inlay.rotation.x = -Math.PI/2; inlay.position.y = .012; g.add(inlay);
+
+  // 石座（上下兩階）
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(STATUE.baseR, STATUE.baseR+.12, STATUE.baseH, 64), stone);
+  base.position.y = STATUE.baseH/2; g.add(base);
+  const step = new THREE.Mesh(new THREE.CylinderGeometry(STATUE.baseR-.45, STATUE.baseR-.3, .34, 64), stone);
+  step.position.y = STATUE.baseH + .17; g.add(step);
+
+  // 頭像雕塑本體：立起來的圓盤，兩面都是花醬
+  const backMat = new THREE.MeshBasicMaterial({color:0xe6e1d6});
+  const tex = loader.load('hh.jpg', t => {
+    // 背面要等圖真的載進來才能 clone，否則 clone 到的是空的
+    const back = t.clone();
+    back.needsUpdate = true;
+    back.center.set(.5,.5); back.rotation = Math.PI/2;   // 背面鏡射回來，字才不會反
+    backMat.map = back; backMat.needsUpdate = true;
+  });
+  tex.encoding = THREE.sRGBEncoding;
+  tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  tex.center.set(.5,.5); tex.rotation = Math.PI/2;   // 圓柱端面的 UV 是轉 90 度的
+
+  const face = new THREE.MeshBasicMaterial({map:tex});
+  const rim  = new THREE.MeshLambertMaterial({color:0xcdc7ba});
+  const disc = new THREE.Mesh(
+    new THREE.CylinderGeometry(STATUE.r, STATUE.r, STATUE.thick, 72),
+    [rim, face, backMat]);
+  disc.rotation.x = Math.PI/2;            // 端面轉向 ±z
+  disc.position.y = STATUE.y; g.add(disc);
+
+  // 頸柱，讓圓盤看起來是立在石座上
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(.42, .62, 1.1, 32), stone);
+  neck.position.y = STATUE.baseH + .5; g.add(neck);
+
+  // 石座正面銘牌
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(1.7, .58), new THREE.MeshBasicMaterial({
+    map: canvasTex(512,176,(c,w,h)=>{
+      c.fillStyle='#1b1a1e'; c.fillRect(0,0,w,h);
+      c.fillStyle='#e9ff2e'; c.textAlign='center';
+      c.font='600 46px "Noto Sans TC","PingFang TC",sans-serif';
+      c.fillText('H.H 花醬', w/2, 74);
+      c.fillStyle='#8a8a83'; c.font='500 26px "IBM Plex Mono",Menlo,monospace';
+      c.fillText('@hannah.huahua', w/2, 126);
+    })
+  }));
+  plate.position.set(0, STATUE.baseH*.55, STATUE.baseR+.045); g.add(plate);
+
+  // 打在雕像上的光
+  const glow = new THREE.Mesh(new THREE.PlaneGeometry(9, 9),
+    new THREE.MeshBasicMaterial({map:glowTex, transparent:true,
+      blending:THREE.AdditiveBlending, depthWrite:false}));
+  glow.rotation.x = -Math.PI/2; glow.position.y = .02; g.add(glow);
+  const spot = new THREE.PointLight(0xfff2d8, .75, 16, 2);
+  spot.position.set(0, 6.2, 0); g.add(spot);
+
+  scene.add(g);
+  return disc;
+}
 
 /* ---------------- 建立畫作 ---------------- */
 const SIZE = 2.55, FRAME = .13, DEPTH = .1;
@@ -357,6 +433,11 @@ manager.onLoad = ()=>{
     document.getElementById('intro').style.display='flex';
   },350);
 };
+
+const statueDisc = buildStatue(loader);
+statueDisc.userData.id = 0; pickables.push(statueDisc);
+artworks.push({ id:0, group:statueDisc, slot:{x:0,y:STATUE.y-.35,z:0},
+                fwd:new THREE.Vector3(0,0,1), mesh:statueDisc, dist:9.5 });
 
 for(let n=1; n<=TOTAL && n<=slots.length; n++){
   const s = slots[n-1];
@@ -474,6 +555,8 @@ function collide(p){
   const r = .55;
   p.x = Math.max(-HX+r+.3, Math.min(HX-r-.3, p.x));
   p.z = Math.max(-HZ+r+.3, Math.min(HZ-r-.3, p.z));
+  const dc = Math.hypot(p.x, p.z), R = STATUE.baseR + .7 + r;
+  if(dc < R){ const k = R / (dc || 1e-6); p.x *= k; p.z *= k; }
   for(const pz of PARTS){
     const dz = p.z - pz;
     if(Math.abs(dz) < PT/2 + r && Math.abs(p.x) < PW/2 + r){
@@ -495,7 +578,7 @@ function focusOn(id){
   const a = artworks.find(w=>w.id===id); if(!a) return;
   focus = a;
   const target = new THREE.Vector3(a.slot.x, a.slot.y, a.slot.z)
-    .add(a.fwd.clone().multiplyScalar(3.8));
+    .add(a.fwd.clone().multiplyScalar(a.dist || 3.8));
   target.y = a.slot.y - .05;
   let look = Math.atan2(a.fwd.x, a.fwd.z);
   // 說明面板佔據右側時，把畫作往畫面左邊挪，避免被蓋住
@@ -520,7 +603,25 @@ function exitFocus(){
   focus = null; camAnim = null; card.classList.remove('show');
   tour = false; document.getElementById('btnTour').classList.remove('on');
 }
+const ARTIST_CARD = {
+  no: 'ARTIST', title: 'H.H 花醬',
+  meta: '身分　　野生藝術家 · Web3.0 勤勞打工人<br>Instagram　@hannah.huahua<br>作品　　#WhoAreWe · 55 件<br>合作　　CompoundWater 複水',
+  img: 'hh.jpg',
+  text: '#WhoAreWe 全部 55 件的創作者。整個系列從一支隨手畫的塗鴉開始，變成一場關於「我們是誰」的自由創作實驗 —— 免費畫、自由 donate，走心客製二創致敬 #Mfers。'
+};
+
 function showCard(a){
+  if(a.id === 0){
+    document.getElementById('cNo').textContent = ARTIST_CARD.no;
+    document.getElementById('cTitle').textContent = ARTIST_CARD.title;
+    document.getElementById('cImg').src = ARTIST_CARD.img;
+    document.getElementById('cMeta').innerHTML = ARTIST_CARD.meta;
+    document.getElementById('cText').textContent = ARTIST_CARD.text;
+    document.getElementById('cText').hidden = false;
+    document.getElementById('cSeries').textContent = '';
+    card.classList.add('show');
+    return;
+  }
   const c = CAPTIONS[a.id] || {};
   document.getElementById('cNo').textContent = `NO. ${String(a.id).padStart(2,'0')} / ${TOTAL}`;
   document.getElementById('cTitle').textContent = c.title || `#WhoAreWe ${a.id}`;
