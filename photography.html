@@ -241,6 +241,58 @@
   }
   .carousel-dots button.active{background:var(--yellow);transform:scale(1.3);}
 
+  .btn{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;
+    letter-spacing:0.03em;
+    background:var(--yellow);color:var(--bg);
+    padding:15px 28px;border-radius:var(--radius);
+    display:inline-flex;align-items:center;gap:10px;
+    border:1px solid var(--yellow);
+    transition:transform .15s, box-shadow .15s;
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(233,255,46,0.18);}
+
+  /* ---------- 鑲嵌展場（沿用 whoarewe.html 的 .embed-* 寫法） ---------- */
+  .embed-section{padding:56px 0;border-bottom:1px solid var(--line);}
+  .embed-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:20px;}
+  .embed-frame{
+    position:relative;width:100%;aspect-ratio:16/9;
+    background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;
+  }
+  .embed-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;}
+  .embed-note{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);margin-top:12px;line-height:1.7;}
+  .embed-note a{color:var(--yellow-dim);}
+  .embed-note a:hover{color:var(--yellow);}
+  .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line);}
+  .btn.ghost:hover{border-color:var(--yellow);color:var(--yellow);box-shadow:none;}
+  @media (max-width:640px){
+    .embed-frame{aspect-ratio:4/5;}
+  }
+
+  /* ---------- 3D 展間入口 ---------- */
+  .g3d{
+    border:1px solid var(--line);border-radius:var(--radius);
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    padding:32px;position:relative;overflow:hidden;
+  }
+  .g3d::before{
+    content:'';position:absolute;top:-160px;right:-80px;width:420px;height:420px;
+    background:radial-gradient(circle, rgba(233,255,46,0.10), transparent 70%);
+    pointer-events:none;
+  }
+  .g3d-inner{position:relative;z-index:1;}
+  .g3d h3{
+    font-family:'Space Grotesk',sans-serif;font-weight:700;
+    font-size:clamp(22px,3vw,30px);margin:0 0 12px;letter-spacing:-0.01em;
+  }
+  .g3d h3 .cn{font-family:'Noto Sans TC',sans-serif;font-weight:900;color:var(--yellow);margin-left:10px;}
+  .g3d p{color:var(--muted);font-size:15px;line-height:1.9;max-width:620px;margin:0 0 26px;}
+  .g3d-meta{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--yellow-dim);
+    letter-spacing:0.08em;margin-top:18px;
+  }
+
   .back-link{
     display:inline-flex;align-items:center;gap:6px;
     font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);
@@ -316,7 +368,7 @@
       "isPartOf": {
         "@id": "https://www.compoundwater.app/#website"
       },
-      "dateModified": "2026-07-15",
+      "dateModified": "2026-09-10",
       "mainEntity": {
         "@id": "https://www.compoundwater.app/photography.html#photoseries"
       }
@@ -392,6 +444,21 @@
     </div>
   </section>
 
+  <!-- 3D 展間入口 -->
+  <section class="block" style="padding-top:0;border-bottom:1px solid var(--line);">
+    <div class="wrap">
+      <div class="g3d">
+        <div class="g3d-inner">
+          <div class="section-num">NEW / VIRTUAL EXHIBITION</div>
+          <h3>The White Room<span class="cn">白盒子展間</span></h3>
+          <p>這輯作品現在也有一間 3D 展場：天窗採光的白盒子美術館，四個系列、25 幅跨頁作品用黑細框裱起來掛在牆上。你可以自己走進去慢慢看，靠近任何一幅都能放大細看原圖，懶得走的話也可以開自動導覽讓它帶你逛一輪。</p>
+          <a class="btn" href="gallery3d-white.html">走進 3D 展間 →</a>
+          <div class="g3d-meta">電腦：WASD／方向鍵走動 · 手機：左下搖桿 + 拖曳畫面</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ABOUT -->
   <section class="block about-block">
     <div class="wrap">
@@ -413,6 +480,25 @@
           <p>2015 年，我在明尼蘇達大學雙城分校交換。那段時間我的人生有了很大的轉變——我遇見了好多好人，也是在那裡，我發現攝影真的能幫助我用探索者的心態走進生活：好奇且開放。它教會我放慢腳步、留心當下，在世界裡找到美的瞬間！也讓我對周遭的一切多了一份深深的感謝。希望你會喜歡我的第一批作品！</p>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- 鑲嵌展場 -->
+  <section class="embed-section">
+    <div class="wrap">
+      <div class="embed-head">
+        <div>
+          <div class="section-num" style="margin-bottom:8px;">Live · 複水自製</div>
+          <h2 class="section-title" style="margin-bottom:0;">3D 藝術展示空間</h2>
+        </div>
+        <a class="btn ghost" href="gallery3d-white.html" target="_blank" rel="noopener">在新分頁開啟 ↗</a>
+      </div>
+      <div class="embed-frame">
+        <iframe src="gallery3d-white.html?embed=1" title="#PHOTOGRAPHY BY LIN 白盒子 3D 展場"
+                allow="fullscreen; pointer-lock; xr-spatial-tracking; gyroscope; accelerometer"
+                allowfullscreen loading="lazy"></iframe>
+      </div>
+      <p class="embed-note">自己蓋的 3D 展場：四個系列、25 幅跨頁作品掛在一間天窗採光的白盒子美術館裡。載入後點「進入展間」就能走動——電腦用 WASD／方向鍵加滑鼠拖曳，手機用左下角的搖桿，靠近任何一幅點下去都可以放大細看原圖。想要更大的畫面，點上面的「在新分頁開啟」。</p>
     </div>
   </section>
 

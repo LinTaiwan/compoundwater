@@ -3,20 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>3D 展間 | 攝影作品集 | CompoundWater 複水</title>
-<meta name="description" content="CompoundWater 複水 — #PHOTOGRAPHY BY LIN · Minnesota, 2015 的 3D 虛擬展間。走進展場，四個系列 25 幅作品掛在牆上，可自由走動、放大細看，也可以開自動導覽。">
-<link rel="canonical" href="https://www.compoundwater.app/gallery3d.html">
-<meta name="robots" content="index, follow">
+<title>白盒子展間 | 攝影作品集 | CompoundWater 複水</title>
+<meta name="description" content="CompoundWater 複水 — #PHOTOGRAPHY BY LIN · Minnesota, 2015 的白盒子 3D 展間：暖白牆面、天窗採光的美術館展場，四個系列 25 幅作品掛在牆上，可自由走動、放大細看。">
+<link rel="canonical" href="https://www.compoundwater.app/gallery3d-white.html">
+<meta name="robots" content="noindex, follow">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="CompoundWater 複水">
 <meta property="og:locale" content="zh_TW">
-<meta property="og:url" content="https://www.compoundwater.app/gallery3d.html">
-<meta property="og:title" content="3D 展間 | 攝影作品集 | CompoundWater 複水">
-<meta property="og:description" content="CompoundWater 複水 — #PHOTOGRAPHY BY LIN · Minnesota, 2015 的 3D 虛擬展間。走進展場，四個系列 25 幅作品掛在牆上，可自由走動、放大細看，也可以開自動導覽。">
+<meta property="og:url" content="https://www.compoundwater.app/gallery3d-white.html">
+<meta property="og:title" content="白盒子展間 | 攝影作品集 | CompoundWater 複水">
+<meta property="og:description" content="CompoundWater 複水 — #PHOTOGRAPHY BY LIN · Minnesota, 2015 的白盒子 3D 展間：暖白牆面、天窗採光的美術館展場。">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="3D 展間 | 攝影作品集 | CompoundWater 複水">
-<meta name="twitter:description" content="CompoundWater 複水 — #PHOTOGRAPHY BY LIN · Minnesota, 2015 的 3D 虛擬展間，可自由走動觀展。">
-<meta name="theme-color" content="#0a0a0a">
+<meta name="twitter:title" content="白盒子展間 | 攝影作品集 | CompoundWater 複水">
+<meta name="twitter:description" content="CompoundWater 複水 — #PHOTOGRAPHY BY LIN · Minnesota, 2015 的白盒子 3D 展間，可自由走動觀展。">
+<meta name="theme-color" content="#efece5">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
@@ -86,8 +86,21 @@
     .navlinks a:last-child{border-bottom:none;}
   }
 
+  /* ============================================================
+     白盒子展場的介面：跟展場一樣走美術館印刷品的調性
+     （淺紙色、墨黑字、細線框，訊號色用印刷紅而不是品牌的電黃）
+     ============================================================ */
+  :root{
+    --m-bg:#efece5;
+    --m-panel:rgba(255,255,255,0.86);
+    --m-line:#c8c2b5;
+    --m-ink:#1a1a18;
+    --m-mute:#6e695d;
+    --m-red:#b0432a;
+  }
+
   /* ---------- 3D 場景 ---------- */
-  #scene{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;display:block;touch-action:none;cursor:grab;}
+  #scene{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;display:block;touch-action:none;cursor:grab;background:var(--m-bg);}
   #scene.locked{cursor:none;}
 
   /* ---------- HUD ---------- */
@@ -96,11 +109,13 @@
 
   .hud-status{
     top:calc(66px + env(safe-area-inset-top));left:24px;
-    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--m-mute);
     letter-spacing:0.08em;line-height:1.9;
+    background:var(--m-panel);border:1px solid var(--m-line);border-radius:var(--radius);
+    padding:10px 14px;backdrop-filter:blur(6px);
   }
-  .hud-status .now{color:var(--yellow);}
-  .hud-status .cn{font-family:'Noto Sans TC',sans-serif;letter-spacing:0;}
+  .hud-status .now{color:var(--m-ink);font-weight:600;}
+  .hud-status .cn{font-family:'Noto Sans TC',sans-serif;letter-spacing:0;color:var(--m-ink);}
 
   .hud-tools{
     top:calc(62px + env(safe-area-inset-top));right:24px;
@@ -108,39 +123,39 @@
   }
   .tool-btn{
     font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.06em;
-    background:rgba(20,20,20,0.78);color:var(--muted);
-    border:1px solid var(--line);border-radius:var(--radius);
-    padding:9px 12px;cursor:pointer;transition:color .15s,border-color .15s;
+    background:var(--m-panel);color:var(--m-ink);
+    border:1px solid var(--m-line);border-radius:var(--radius);
+    padding:9px 12px;cursor:pointer;transition:color .15s,border-color .15s,background .15s;
     backdrop-filter:blur(6px);white-space:nowrap;
   }
-  .tool-btn:hover{color:var(--yellow);border-color:var(--yellow-dim);}
-  .tool-btn.on{color:var(--bg);background:var(--yellow);border-color:var(--yellow);}
+  .tool-btn:hover{color:var(--m-red);border-color:var(--m-red);}
+  .tool-btn.on{color:#fff;background:var(--m-ink);border-color:var(--m-ink);}
 
   .hud-hint{
     left:50%;transform:translateX(-50%);
     bottom:calc(22px + env(safe-area-inset-bottom));
-    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);
-    background:rgba(10,10,10,0.6);border:1px solid var(--line);border-radius:var(--radius);
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--m-mute);
+    background:var(--m-panel);border:1px solid var(--m-line);border-radius:var(--radius);
     padding:8px 14px;text-align:center;letter-spacing:0.04em;
     backdrop-filter:blur(6px);max-width:calc(100vw - 40px);
   }
 
   .reticle{
     left:50%;top:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;
-    border-radius:50%;background:rgba(242,242,234,0.55);
+    border-radius:50%;background:rgba(26,26,24,0.45);
     transition:transform .16s,background .16s;
   }
-  .reticle.hot{background:var(--yellow);transform:scale(2.2);}
+  .reticle.hot{background:var(--m-red);transform:scale(2.2);}
 
   .focus-label{
     left:50%;top:calc(50% + 34px);transform:translateX(-50%);
     font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.08em;
-    color:var(--text);background:rgba(10,10,10,0.72);
-    border:1px solid var(--yellow-dim);border-radius:var(--radius);
+    color:var(--m-mute);background:rgba(255,255,255,0.92);
+    border:1px solid var(--m-line);border-radius:var(--radius);
     padding:7px 12px;opacity:0;transition:opacity .18s;white-space:nowrap;
   }
   .focus-label.show{opacity:1;}
-  .focus-label b{color:var(--yellow);font-weight:500;}
+  .focus-label b{color:var(--m-ink);font-weight:600;}
 
   /* ---------- 手機搖桿 ---------- */
   .stick{
@@ -148,65 +163,67 @@
     left:calc(20px + env(safe-area-inset-left));
     bottom:calc(78px + env(safe-area-inset-bottom));
     width:118px;height:118px;border-radius:50%;
-    border:1px solid var(--line);background:rgba(20,20,20,0.5);
+    border:1px solid var(--m-line);background:rgba(255,255,255,0.42);
     touch-action:none;z-index:45;
   }
   .stick .knob{
     position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;
-    border-radius:50%;background:rgba(233,255,46,0.16);border:1px solid var(--yellow-dim);
+    border-radius:50%;background:rgba(26,26,24,0.14);border:1px solid var(--m-line);
   }
   .stick .stick-hint{
     position:absolute;left:0;right:0;bottom:-22px;text-align:center;
-    font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:0.08em;
+    font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--m-mute);letter-spacing:0.08em;
   }
   body.touch .stick{display:block;}
   body.touch .reticle{display:none;}
 
-  /* ---------- 載入畫面 ---------- */
+  /* ---------- 載入畫面：一張展覽邀請卡 ---------- */
   .loader{
-    position:fixed;inset:0;z-index:200;background:var(--bg);
+    position:fixed;inset:0;z-index:200;background:var(--m-bg);color:var(--m-ink);
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     padding:24px;text-align:center;transition:opacity .5s;
   }
   .loader.gone{opacity:0;pointer-events:none;}
   .loader .eyebrow{
     display:inline-flex;align-items:center;gap:8px;
-    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.08em;
-    color:var(--yellow-dim);text-transform:uppercase;margin-bottom:18px;
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.14em;
+    color:var(--m-mute);text-transform:uppercase;margin-bottom:18px;
   }
-  .loader .eyebrow::before{content:'';width:6px;height:6px;background:var(--yellow);border-radius:50%;box-shadow:0 0 8px var(--yellow);}
+  .loader .eyebrow::before{content:'';width:22px;height:1px;background:var(--m-ink);}
   .loader h1{
     font-family:'Space Grotesk',sans-serif;font-weight:700;
     font-size:clamp(26px,5vw,46px);line-height:1.15;margin:0 0 14px;letter-spacing:-0.01em;
   }
   .loader h1 .cn{font-family:'Noto Sans TC',sans-serif;font-weight:900;}
-  .loader p{color:var(--muted);font-size:14px;line-height:1.9;max-width:520px;margin:0 0 26px;}
-  .bar{width:min(320px,80vw);height:2px;background:var(--line);border-radius:var(--radius);overflow:hidden;}
-  .bar i{display:block;height:100%;width:0%;background:var(--yellow);transition:width .25s;}
-  .bar-num{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-top:12px;letter-spacing:0.08em;}
+  .loader p{color:var(--m-mute);font-size:14px;line-height:1.9;max-width:520px;margin:0 0 26px;}
+  .bar{width:min(320px,80vw);height:2px;background:var(--m-line);border-radius:var(--radius);overflow:hidden;}
+  .bar i{display:block;height:100%;width:0%;background:var(--m-ink);transition:width .25s;}
+  .bar-num{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--m-mute);margin-top:12px;letter-spacing:0.08em;}
   .enter-btn{
     margin-top:26px;display:none;
     font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:0.08em;
-    background:var(--yellow);color:var(--bg);border:1px solid var(--yellow);
+    background:var(--m-ink);color:#fff;border:1px solid var(--m-ink);
     border-radius:var(--radius);padding:14px 26px;cursor:pointer;font-weight:600;
+    transition:background .15s,color .15s;
   }
+  .enter-btn:hover{background:var(--m-red);border-color:var(--m-red);}
   .enter-btn.ready{display:inline-block;}
   .keys{
     margin-top:24px;font-family:'IBM Plex Mono',monospace;font-size:11px;
-    color:var(--muted);line-height:2;letter-spacing:0.04em;
+    color:var(--m-mute);line-height:2;letter-spacing:0.04em;
   }
   .keys kbd{
-    border:1px solid var(--line);border-radius:var(--radius);
-    padding:2px 6px;margin:0 2px;color:var(--text);background:var(--panel-2);
+    border:1px solid var(--m-line);border-radius:var(--radius);
+    padding:2px 6px;margin:0 2px;color:var(--m-ink);background:rgba(255,255,255,0.7);
   }
   .loader .back{
-    margin-top:22px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);
+    margin-top:22px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--m-mute);
   }
-  .loader .back:hover{color:var(--yellow);}
+  .loader .back:hover{color:var(--m-red);}
 
   /* ---------- 放大看作品 ---------- */
   .light{
-    position:fixed;inset:0;z-index:150;background:rgba(6,6,6,0.94);
+    position:fixed;inset:0;z-index:150;background:rgba(239,236,229,0.96);
     display:none;flex-direction:column;align-items:center;justify-content:center;
     padding:calc(70px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));
     backdrop-filter:blur(4px);
@@ -214,35 +231,43 @@
   .light.open{display:flex;}
   .light img{
     max-width:min(1180px,100%);max-height:72vh;
-    border:1px solid var(--line);border-radius:var(--radius);background:#fff;
+    border:1px solid var(--m-line);border-radius:var(--radius);background:#fff;
+    box-shadow:0 18px 48px rgba(60,54,44,0.18);
   }
   .light-meta{
     margin-top:16px;text-align:center;font-family:'IBM Plex Mono',monospace;
-    font-size:11px;color:var(--muted);letter-spacing:0.08em;
+    font-size:11px;color:var(--m-mute);letter-spacing:0.08em;
   }
-  .light-meta .t{color:var(--yellow);}
-  .light-meta .cn{font-family:'Noto Sans TC',sans-serif;color:var(--text);letter-spacing:0;display:block;margin-top:6px;font-size:13px;}
+  .light-meta .t{color:var(--m-ink);font-weight:600;}
+  .light-meta .cn{font-family:'Noto Sans TC',sans-serif;color:var(--m-mute);letter-spacing:0;display:block;margin-top:6px;font-size:13px;}
   .light-nav{display:flex;gap:10px;margin-top:20px;}
   .light-x{
     position:absolute;top:calc(74px + env(safe-area-inset-top));right:20px;
-    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);
-    background:none;border:1px solid var(--line);border-radius:var(--radius);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--m-ink);
+    background:rgba(255,255,255,0.8);border:1px solid var(--m-line);border-radius:var(--radius);
     width:38px;height:38px;cursor:pointer;
   }
-  .light-x:hover{color:var(--yellow);border-color:var(--yellow-dim);}
+  .light-x:hover{color:var(--m-red);border-color:var(--m-red);}
 
   .fail{
     position:fixed;inset:0;z-index:300;display:none;
     flex-direction:column;align-items:center;justify-content:center;
-    background:var(--bg);padding:24px;text-align:center;
+    background:var(--m-bg);color:var(--m-ink);padding:24px;text-align:center;
   }
   .fail.show{display:flex;}
   .fail h2{font-family:'Space Grotesk',sans-serif;font-size:22px;margin:0 0 12px;}
-  .fail p{color:var(--muted);font-size:14px;line-height:1.9;max-width:460px;}
-  .fail a{color:var(--yellow);font-family:'IBM Plex Mono',monospace;font-size:12px;margin-top:18px;}
+  .fail p{color:var(--m-mute);font-size:14px;line-height:1.9;max-width:460px;}
+  .fail a{color:var(--m-red);font-family:'IBM Plex Mono',monospace;font-size:12px;margin-top:18px;}
+
+  /* ---------- 鑲在頁面裡時（?embed=1）：收掉站台 header，HUD 往上挪 ---------- */
+  body.embed header{display:none;}
+  body.embed .hud-status{top:calc(16px + env(safe-area-inset-top));left:16px;}
+  body.embed .hud-tools{top:calc(14px + env(safe-area-inset-top));right:16px;}
+  body.embed .light{padding-top:24px;}
+  body.embed .light-x{top:16px;}
 
   @media (max-width:760px){
-    .hud-status{left:16px;font-size:10px;}
+    .hud-status{left:16px;font-size:10px;padding:8px 11px;}
     .hud-tools{right:16px;}
     .hud-hint{font-size:10px;padding:7px 10px;}
   }
@@ -277,7 +302,7 @@
 <div class="hud hud-tools">
   <button class="tool-btn" id="tourBtn" type="button">[ 自動導覽 ]</button>
   <button class="tool-btn" id="resetBtn" type="button">[ 回到入口 ]</button>
-  <a class="tool-btn" href="photography.html">[ 離開展間 ]</a>
+  <a class="tool-btn" id="exitLink" href="photography.html">[ 離開展間 ]</a>
 </div>
 
 <div class="hud reticle" id="reticle"></div>
@@ -306,8 +331,8 @@
 <!-- 載入畫面 -->
 <div class="loader" id="loader">
   <div class="eyebrow">Virtual Exhibition / 3D</div>
-  <h1>THE FILM ROOM <br><span class="cn">底片展間</span></h1>
-  <p>把 2015 年在明尼蘇達拍的那本攝影書搬進一間展場：四個系列、25 幅跨頁作品掛在牆上。走進去慢慢看，靠近任何一幅都可以放大細看原圖。</p>
+  <h1>THE WHITE ROOM <br><span class="cn">白盒子展間</span></h1>
+  <p>把 2015 年在明尼蘇達拍的那本攝影書，掛進一間天窗採光的白盒子美術館：暖白牆面、黑細框裱起來的 25 幅跨頁作品，分成四個系列。走進去慢慢看，靠近任何一幅都可以放大細看原圖。</p>
   <div class="bar"><i id="barFill"></i></div>
   <div class="bar-num" id="barNum">LOADING 0%</div>
   <button class="enter-btn" id="enterBtn" type="button">進入展間 →</button>
@@ -315,11 +340,11 @@
     <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 或 <kbd>方向鍵</kbd> 走動 · <kbd>Shift</kbd> 快走</div>
     <div>滑鼠拖曳（或點一下鎖定視角）看四周 · 點擊作品放大 · <kbd>Esc</kbd> 退出</div>
   </div>
-  <a class="back mono" href="photography.html">[ 回到攝影作品集 ]</a>
+  <a class="back mono" id="backLink" href="photography.html">[ 回到攝影作品集 ]</a>
 </div>
 
 <div class="fail" id="fail">
-  <h2>這台裝置跑不動 3D 展間</h2>
+  <h2>這台裝置跑不動 3D 展場</h2>
   <p>展間需要 WebGL 才能算出畫面。你的瀏覽器好像沒開啟或不支援——換一台裝置、或直接回攝影頁用平面的方式看，一樣是同一批作品。</p>
   <a class="mono" href="photography.html">[ 回到攝影作品集 ]</a>
 </div>
@@ -359,8 +384,8 @@ const SERIES = [
 const TOTAL_WORKS = SERIES.reduce((n,s)=>n+s.images.length,0);
 
 // 展場尺寸
-const HALF_W   = 6.0;   // 走道半寬
-const WALL_H   = 5.2;   // 牆高
+const HALF_W   = 5.3;   // 走道半寬
+const WALL_H   = 4.5;   // 牆高
 const ART_Y    = 2.05;  // 作品中心高度
 const MAX_W    = 4.7;   // 作品最大寬
 const MAX_H    = 2.7;   // 作品最大高
@@ -368,6 +393,17 @@ const SPACING  = 6.0;   // 同一面牆上相鄰作品的間距
 const GAP      = 8.0;   // 系列之間的間距
 const EYE      = 1.62;  // 視線高度
 const Z_START  = 9.0;   // 入口牆
+
+// 鑲在頁面裡（iframe，網址帶 ?embed=1）時要收掉站台 header，離場連結改成開新分頁
+const EMBED = new URLSearchParams(location.search).has('embed');
+const SELF_URL = location.pathname.split('/').pop() || 'gallery3d-white.html';
+if (EMBED) {
+  document.body.classList.add('embed');
+  const exit = document.getElementById('exitLink');
+  if (exit) { exit.textContent = '[ 全螢幕開啟 ↗ ]'; exit.href = SELF_URL; exit.target = '_blank'; exit.rel = 'noopener'; }
+  const back = document.getElementById('backLink');
+  if (back) { back.textContent = '[ 全螢幕開啟展場 ↗ ]'; back.href = SELF_URL; back.target = '_blank'; back.rel = 'noopener'; }
+}
 
 const isTouch = matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 1;
 if (isTouch) {
@@ -404,38 +440,66 @@ renderer.setSize(vw(), vh());
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
-const FOG = 0x07070a;
+const FOG = 0xe4dfd6;                       // 遠處的空氣感，跟牆色同一家族
 scene.background = new THREE.Color(FOG);
-scene.fog = new THREE.Fog(FOG, 24, 78);
+scene.fog = new THREE.Fog(FOG, 34, 108);
 
 const camera = new THREE.PerspectiveCamera(isTouch ? 70 : 62, vw() / vh(), 0.1, 220);
 camera.rotation.order = 'YXZ';
 camera.position.set(0, EYE, Z_START - 2.4);
 
-scene.add(new THREE.AmbientLight(0xb9c0d0, 0.62));
-const hemi = new THREE.HemisphereLight(0xd8dcf0, 0x0a0a08, 0.45);
+// 天窗採光：整體很亮、很平，只留一點點方向性讓牆面不要死板
+scene.add(new THREE.AmbientLight(0xffffff, 1.02));
+const hemi = new THREE.HemisphereLight(0xfffdf8, 0xdcd6c8, 0.5);
 scene.add(hemi);
-// 跟著觀眾走的一顆燈，讓牆面在近處有柔和的明暗變化
-const lantern = new THREE.PointLight(0xfff2cf, 1.35, 30, 2);
-camera.add(lantern);
+const sun = new THREE.DirectionalLight(0xfff8ec, 0.34);
+sun.position.set(5, 12, 3);
+scene.add(sun);
 scene.add(camera);
 
 // ============================================================
 //  小工具：漸層光暈 / 文字貼圖
 // ============================================================
-function glowTexture(){
+// 柔和陰影貼圖：白底 + 一塊模糊的深灰，用相乘混色貼上去就只會壓暗、不會留邊
+function shadowTexture(){
   const c = document.createElement('canvas'); c.width = c.height = 256;
   const ctx = c.getContext('2d');
-  const g = ctx.createRadialGradient(128,128,4,128,128,126);
-  g.addColorStop(0,'rgba(255,246,220,0.75)');
-  g.addColorStop(0.45,'rgba(255,244,214,0.22)');
-  g.addColorStop(1,'rgba(255,240,200,0)');
-  ctx.fillStyle = g; ctx.fillRect(0,0,256,256);
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 256, 256);
+  ctx.shadowColor = 'rgba(70,64,54,0.55)';
+  ctx.shadowBlur = 34;
+  ctx.fillStyle = 'rgba(70,64,54,0.55)';
+  ctx.fillRect(48, 48, 160, 160);
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }
-const GLOW = glowTexture();
+const SHADOW = shadowTexture();
+
+// 牆面的紙面顆粒 / 地板的磨石子斑點：讓平面不要看起來像純色塑膠
+function grainTexture(base, dots, sizeMin, sizeMax, colors, alpha){
+  const c = document.createElement('canvas'); c.width = c.height = 512;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = base; ctx.fillRect(0, 0, 512, 512);
+  ctx.globalAlpha = alpha;
+  for (let i = 0; i < dots; i++) {
+    ctx.fillStyle = colors[(Math.random() * colors.length) | 0];
+    const r = sizeMin + Math.random() * (sizeMax - sizeMin);
+    ctx.beginPath();
+    ctx.arc(Math.random() * 512, Math.random() * 512, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+function shadowMaterial(op){
+  return new THREE.MeshBasicMaterial({
+    map: SHADOW, blending: THREE.MultiplyBlending,
+    transparent: true, opacity: op, depthWrite: false, toneMapped: false
+  });
+}
 
 function textTexture(draw, w = 1024, h = 512){
   const c = document.createElement('canvas'); c.width = w; c.height = h;
@@ -526,26 +590,35 @@ function hangWork(name, s, idx, side, z){
   if (h > MAX_H) { h = MAX_H; w = MAX_H * ar; }
 
   const wallX = side * HALF_W;
-  const faceX = wallX - side * 0.13;     // 畫面掛在畫框前面，不然會被畫框遮住
+  const faceX = wallX - side * 0.085;    // 畫面掛在畫框與裱框前面
   const group = new THREE.Group();
   scene.add(group);
 
-  // 牆上的光暈（先畫，讓它躲在畫框後面）
-  const pool = new THREE.Mesh(
-    new THREE.PlaneGeometry(w * 1.85, Math.min(WALL_H - 0.2, h * 3.1)),
-    new THREE.MeshBasicMaterial({ map: GLOW, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, opacity: 0.55 })
+  // 牆上的落影（讓畫框從白牆上浮起來）
+  const wallShadow = new THREE.Mesh(
+    new THREE.PlaneGeometry(w + 0.85, h + 0.85),
+    shadowMaterial(0.34)
   );
-  pool.position.set(wallX - side * 0.02, ART_Y + 0.1, z);
-  pool.rotation.y = side * -Math.PI / 2;
-  group.add(pool);
+  wallShadow.position.set(wallX - side * 0.015, ART_Y - 0.06, z);
+  wallShadow.rotation.y = side * -Math.PI / 2;
+  group.add(wallShadow);
 
-  // 畫框
+  // 黑細框
   const frame = new THREE.Mesh(
-    new THREE.BoxGeometry(0.10, h + 0.22, w + 0.22),
-    new THREE.MeshStandardMaterial({ color: 0x0b0b0b, roughness: 0.45, metalness: 0.25 })
+    new THREE.BoxGeometry(0.07, h + 0.50, w + 0.50),
+    new THREE.MeshStandardMaterial({ color: 0x1b1b1a, roughness: 0.62, metalness: 0.10 })
   );
-  frame.position.set(wallX - side * 0.05, ART_Y, z);
+  frame.position.set(wallX - side * 0.035, ART_Y, z);
   group.add(frame);
+
+  // 白裱框（美術館的 mat，讓作品跟牆色分開）
+  const mat = new THREE.Mesh(
+    new THREE.PlaneGeometry(w + 0.38, h + 0.38),
+    new THREE.MeshStandardMaterial({ color: 0xfbfaf7, roughness: 0.96 })
+  );
+  mat.position.set(wallX - side * 0.075, ART_Y, z);
+  mat.rotation.y = side * -Math.PI / 2;
+  group.add(mat);
 
   // 作品本體：用 Basic 材質，讓底片的黑白始終乾淨銳利
   const art = new THREE.Mesh(
@@ -556,8 +629,15 @@ function hangWork(name, s, idx, side, z){
   art.rotation.y = side * -Math.PI / 2;
   group.add(art);
 
-  // 地板上的倒影（把 UV 上下翻轉，躺平放在牆邊）
-  const refLen = h * 0.85;
+  // 地板上的落影
+  const floorShadow = new THREE.Mesh(new THREE.PlaneGeometry(w + 0.7, 1.3), shadowMaterial(0.30));
+  floorShadow.rotation.x = -Math.PI / 2;
+  floorShadow.rotation.z = Math.PI / 2;
+  floorShadow.position.set(side * (HALF_W - 0.6), 0.008, z);
+  group.add(floorShadow);
+
+  // 磨石地板上很淡的映影（把 UV 上下翻轉，躺平放在牆邊）
+  const refLen = h * 0.7;
   const refGeo = new THREE.PlaneGeometry(w, refLen);
   const uv = refGeo.attributes.uv;
   for (let i = 0; i < uv.count; i++) uv.setY(i, 1 - uv.getY(i));
@@ -565,32 +645,28 @@ function hangWork(name, s, idx, side, z){
   refGeo.rotateX(-Math.PI / 2);
   refGeo.rotateY(side * -Math.PI / 2);
   const ref = new THREE.Mesh(refGeo, new THREE.MeshBasicMaterial({
-    map: tex, transparent: true, opacity: 0.15, depthWrite: false, toneMapped: false
+    map: tex, transparent: true, opacity: 0.11, depthWrite: false, toneMapped: false
   }));
   ref.position.set(side * (HALF_W - refLen / 2 - 0.12), 0.013, z);
   group.add(ref);
 
-  // 天花板軌道燈
-  const fixture = new THREE.Mesh(
-    new THREE.BoxGeometry(0.5, 0.12, 0.5),
-    new THREE.MeshBasicMaterial({ color: 0xfff4d6, toneMapped: false })
-  );
-  fixture.position.set(side * (HALF_W - 1.25), WALL_H - 0.16, z);
-  group.add(fixture);
-
-  // 作品標籤
+  // 美術館牆標：掛在作品旁邊，深墨色字直接印在白牆上
   const n = works.length + 1;
   const label = String(n).padStart(2, '0');
   const tex2 = textTexture((ctx, W, H) => {
-    ctx.fillStyle = 'rgba(255,255,255,0.55)';
-    ctx.font = '600 54px "IBM Plex Mono", monospace';
+    ctx.fillStyle = '#1c1c1a';
+    ctx.font = '600 44px "IBM Plex Mono", monospace';
     ctx.textBaseline = 'top';
-    ctx.fillText(s.num + ' / ' + s.en.toUpperCase(), 8, 10);
-    ctx.fillStyle = '#e9ff2e';
-    ctx.fillText('NO.' + label, 8, 78);
-  }, 1024, 160);
-  const plaque = textPlane(tex2, 1.15, 0.18);
-  plaque.position.set(faceX, ART_Y - h / 2 - 0.30, z - side * (w / 2 - 0.62));
+    ctx.fillText(s.num + ' / ' + s.en.toUpperCase() + ' — NO.' + label, 6, 6);
+    ctx.fillStyle = '#57534a';
+    ctx.font = '400 40px "Noto Sans TC", sans-serif';
+    ctx.fillText(s.cn + '　' + s.tag, 6, 70);
+    ctx.font = '400 36px "IBM Plex Mono", monospace';
+    ctx.fillStyle = '#7d7768';
+    ctx.fillText('35mm FILM · MINNESOTA, 2015', 6, 138);
+  }, 1024, 200);
+  const plaque = textPlane(tex2, 1.5, 0.29);
+  plaque.position.set(wallX - side * 0.02, 1.42, z - (w / 2 + 0.55));
   plaque.rotation.y = side * -Math.PI / 2;
   group.add(plaque);
 
@@ -604,49 +680,41 @@ function hangWork(name, s, idx, side, z){
 }
 
 function threshold(s){
-  // 地上一道電黃色的分界線
+  // 地上一道淺淺的分界線，像磨石地的收邊
   const strip = new THREE.Mesh(
-    new THREE.BoxGeometry(HALF_W * 2 - 0.04, 0.02, 0.08),
-    new THREE.MeshBasicMaterial({ color: 0xb9cc22, toneMapped: false })
+    new THREE.BoxGeometry(HALF_W * 2 - 0.04, 0.02, 0.07),
+    new THREE.MeshStandardMaterial({ color: 0xa9a294, roughness: 0.7, metalness: 0.1 })
   );
   strip.position.set(0, 0.012, s.startZ);
   scene.add(strip);
 
-  // 兩側的系列名牌
+  // 兩側牆上的系列大字（美術館的牆面文字，直接印在白牆上）
   const tex = textTexture((ctx, W, H) => {
-    ctx.fillStyle = '#9aa816';
-    ctx.font = '500 40px "IBM Plex Mono", monospace';
+    ctx.fillStyle = '#8a8375';
+    ctx.font = '500 38px "IBM Plex Mono", monospace';
     ctx.textBaseline = 'top';
-    ctx.fillText(s.num + ' / SERIES', 12, 8);
-    ctx.fillStyle = '#f2f2ea';
-    ctx.font = '700 108px "Space Grotesk", sans-serif';
-    ctx.fillText(s.en, 8, 66);
-    ctx.fillStyle = '#e9ff2e';
-    ctx.font = '900 86px "Noto Sans TC", sans-serif';
-    ctx.fillText(s.cn, 8, 196);
-    ctx.fillStyle = 'rgba(138,138,131,0.95)';
-    ctx.font = '400 46px "Noto Sans TC", sans-serif';
-    ctx.fillText(s.tag, 10, 306);
-    ctx.fillStyle = '#2a2a2a';
-    ctx.fillRect(8, 386, 620, 3);
-    ctx.fillStyle = 'rgba(138,138,131,0.9)';
-    ctx.font = '400 40px "IBM Plex Mono", monospace';
-    ctx.fillText(s.images.length + ' WORKS', 10, 404);
-  }, 1024, 470);
+    ctx.fillText(s.num + ' / SERIES', 10, 6);
+    ctx.fillStyle = '#141412';
+    ctx.font = '700 112px "Space Grotesk", sans-serif';
+    ctx.fillText(s.en, 6, 60);
+    ctx.fillStyle = '#141412';
+    ctx.font = '900 84px "Noto Sans TC", sans-serif';
+    ctx.fillText(s.cn, 8, 192);
+    ctx.fillStyle = '#4d4941';
+    ctx.font = '400 44px "Noto Sans TC", sans-serif';
+    ctx.fillText(s.tag, 10, 300);
+    ctx.fillStyle = '#c3bcae';
+    ctx.fillRect(8, 382, 620, 2);
+    ctx.fillStyle = '#8a8375';
+    ctx.font = '400 38px "IBM Plex Mono", monospace';
+    ctx.fillText(s.images.length + ' WORKS', 10, 400);
+  }, 1024, 460);
 
   [-1, 1].forEach(side => {
-    const p = textPlane(tex, 3.5, 1.61);
-    p.position.set(side * (HALF_W - 0.05), 2.25, s.startZ);
+    const p = textPlane(tex, 3.5, 1.57);
+    p.position.set(side * (HALF_W - 0.02), 2.25, s.startZ);
     p.rotation.y = side * -Math.PI / 2;
     scene.add(p);
-    // 名牌上方的洗牆光
-    const wash = new THREE.Mesh(
-      new THREE.PlaneGeometry(4.4, 3.4),
-      new THREE.MeshBasicMaterial({ map: GLOW, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, opacity: 0.30 })
-    );
-    wash.position.set(side * (HALF_W - 0.02), 2.4, s.startZ);
-    wash.rotation.y = side * -Math.PI / 2;
-    scene.add(wash);
   });
 }
 
@@ -654,9 +722,12 @@ function shell(){
   const len = Z_START - Z_END;
   const midZ = (Z_START + Z_END) / 2;
 
+  const terrazzo = grainTexture('#e6e2d8', 2200, 0.7, 2.2,
+    ['#cfc8b9', '#dcd6c8', '#b5ae9f', '#f0ede5'], 0.42);
+  terrazzo.repeat.set(5, Math.round(len / 2.2));
   const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(HALF_W * 2, len),
-    new THREE.MeshStandardMaterial({ color: 0x171717, roughness: 0.40, metalness: 0.35 })
+    new THREE.MeshStandardMaterial({ map: terrazzo, color: 0xf2efe8, roughness: 0.48, metalness: 0.2 })
   );
   floor.rotation.x = -Math.PI / 2;
   floor.position.set(0, 0, midZ);
@@ -664,39 +735,54 @@ function shell(){
 
   const ceil = new THREE.Mesh(
     new THREE.PlaneGeometry(HALF_W * 2, len),
-    new THREE.MeshStandardMaterial({ color: 0x0d0d0d, roughness: 0.95 })
+    new THREE.MeshStandardMaterial({ color: 0xf3f1ec, roughness: 1.0 })
   );
   ceil.rotation.x = Math.PI / 2;
   ceil.position.set(0, WALL_H, midZ);
   scene.add(ceil);
 
-  const wallMat = new THREE.MeshStandardMaterial({ color: 0x232320, roughness: 0.92, metalness: 0.0 });
+  const plaster = grainTexture('#f2efe8', 1800, 0.6, 2.2, ['#e7e3da', '#fbf9f4', '#dedacf', '#efece4'], 0.5);
+  plaster.repeat.set(Math.round(len / 6), 1);
+  const wallMat = new THREE.MeshStandardMaterial({ map: plaster, color: 0xfdfcf9, roughness: 0.98, metalness: 0.0 });
   [-1, 1].forEach(side => {
     const wall = new THREE.Mesh(new THREE.PlaneGeometry(len, WALL_H), wallMat);
     wall.rotation.y = side * -Math.PI / 2;
     wall.position.set(side * HALF_W, WALL_H / 2, midZ);
     scene.add(wall);
 
-    // 牆腳的一道細黃線
+    // 牆腳的收邊踢腳線
     const kick = new THREE.Mesh(
-      new THREE.BoxGeometry(0.03, 0.03, len),
-      new THREE.MeshBasicMaterial({ color: 0x4d5411, toneMapped: false })
+      new THREE.BoxGeometry(0.04, 0.10, len),
+      new THREE.MeshStandardMaterial({ color: 0xe4dfd4, roughness: 0.9 })
     );
     kick.position.set(side * (HALF_W - 0.02), 0.05, midZ);
     scene.add(kick);
   });
 
-  // 天花板中央的一條微光燈帶
-  const strip = new THREE.Mesh(
-    new THREE.BoxGeometry(0.16, 0.04, len - 1),
-    new THREE.MeshBasicMaterial({ color: 0x33352a, toneMapped: false })
-  );
-  strip.position.set(0, WALL_H - 0.05, midZ);
-  scene.add(strip);
+  // 天窗：兩道長條採光板，是這間展場的主要光源感
+  [-1, 1].forEach(side => {
+    const sky = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.35, len - 2),
+      new THREE.MeshBasicMaterial({ color: 0xfffdf6, toneMapped: false })
+    );
+    sky.rotation.x = Math.PI / 2;
+    sky.position.set(side * 2.55, WALL_H - 0.03, midZ);
+    scene.add(sky);
+
+    // 天窗的邊框
+    [-1, 1].forEach(edge => {
+      const rail = new THREE.Mesh(
+        new THREE.BoxGeometry(0.07, 0.08, len - 2),
+        new THREE.MeshStandardMaterial({ color: 0xbdb7aa, roughness: 0.85 })
+      );
+      rail.position.set(side * 2.55 + edge * 0.71, WALL_H - 0.06, midZ);
+      scene.add(rail);
+    });
+  });
 }
 
 function endWalls(){
-  const capMat = new THREE.MeshStandardMaterial({ color: 0x161615, roughness: 0.9 });
+  const capMat = new THREE.MeshStandardMaterial({ color: 0xece8e0, roughness: 0.98 });
 
   // 入口牆（在觀眾背後）
   const front = new THREE.Mesh(new THREE.PlaneGeometry(HALF_W * 2, WALL_H), capMat);
@@ -705,19 +791,19 @@ function endWalls(){
   scene.add(front);
 
   const tIn = textTexture((ctx, W, H) => {
-    ctx.fillStyle = '#9aa816';
-    ctx.font = '500 38px "IBM Plex Mono", monospace';
+    ctx.fillStyle = '#8a8375';
+    ctx.font = '500 36px "IBM Plex Mono", monospace';
     ctx.textBaseline = 'top';
-    ctx.fillText('VIRTUAL EXHIBITION / 3D', 14, 10);
-    ctx.fillStyle = '#f2f2ea';
-    ctx.font = '700 96px "Space Grotesk", sans-serif';
-    ctx.fillText('#PHOTOGRAPHY BY LIN', 10, 62);
-    ctx.fillStyle = '#e9ff2e';
-    ctx.font = '900 76px "Noto Sans TC", sans-serif';
-    ctx.fillText('MINNESOTA, 2015', 12, 176);
-    ctx.fillStyle = 'rgba(138,138,131,0.95)';
-    ctx.font = '400 42px "Noto Sans TC", sans-serif';
-    ctx.fillText('用鏡頭記錄探索世界的第一步', 14, 280);
+    ctx.fillText('VIRTUAL EXHIBITION / 3D', 12, 8);
+    ctx.fillStyle = '#141412';
+    ctx.font = '700 92px "Space Grotesk", sans-serif';
+    ctx.fillText('#PHOTOGRAPHY BY LIN', 8, 58);
+    ctx.fillStyle = '#141412';
+    ctx.font = '900 72px "Noto Sans TC", sans-serif';
+    ctx.fillText('MINNESOTA, 2015', 10, 170);
+    ctx.fillStyle = '#4d4941';
+    ctx.font = '400 40px "Noto Sans TC", sans-serif';
+    ctx.fillText('用鏡頭記錄探索世界的第一步', 12, 272);
   }, 1024, 360);
   const inSign = textPlane(tIn, 5.4, 1.9);
   inSign.position.set(0, 2.5, Z_START - 0.05);
@@ -730,19 +816,19 @@ function endWalls(){
   scene.add(back);
 
   const tOut = textTexture((ctx, W, H) => {
-    ctx.fillStyle = '#9aa816';
-    ctx.font = '500 38px "IBM Plex Mono", monospace';
+    ctx.fillStyle = '#8a8375';
+    ctx.font = '500 36px "IBM Plex Mono", monospace';
     ctx.textBaseline = 'top';
-    ctx.fillText('END OF EXHIBITION', 14, 10);
-    ctx.fillStyle = '#f2f2ea';
-    ctx.font = '700 84px "Space Grotesk", sans-serif';
-    ctx.fillText('THANKS FOR WALKING', 10, 62);
-    ctx.fillStyle = '#e9ff2e';
-    ctx.font = '900 68px "Noto Sans TC", sans-serif';
-    ctx.fillText('謝謝你走完這一輪', 12, 168);
-    ctx.fillStyle = 'rgba(138,138,131,0.95)';
-    ctx.font = '400 40px "Noto Sans TC", sans-serif';
-    ctx.fillText('回攝影頁可以看整輯作品的完整介紹', 14, 268);
+    ctx.fillText('END OF EXHIBITION', 12, 8);
+    ctx.fillStyle = '#141412';
+    ctx.font = '700 80px "Space Grotesk", sans-serif';
+    ctx.fillText('THANKS FOR WALKING', 8, 58);
+    ctx.fillStyle = '#141412';
+    ctx.font = '900 64px "Noto Sans TC", sans-serif';
+    ctx.fillText('謝謝你走完這一輪', 10, 162);
+    ctx.fillStyle = '#4d4941';
+    ctx.font = '400 38px "Noto Sans TC", sans-serif';
+    ctx.fillText('回攝影頁可以看整輯作品的完整介紹', 12, 262);
   }, 1024, 350);
   const outSign = textPlane(tOut, 5.2, 1.78);
   outSign.position.set(0, 2.45, Z_END + 0.05);
@@ -1072,7 +1158,7 @@ enterBtn.addEventListener('click', () => {
   loaderEl.classList.add('gone');
   started = true;
   setTimeout(() => { loaderEl.style.display = 'none'; }, 520);
-  if (!isTouch) requestLock();
+  if (!isTouch && !EMBED) requestLock();
 });
 
 // ============================================================
@@ -1185,9 +1271,9 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) onRe
     },
     {
       "@type": "WebPage",
-      "@id": "https://www.compoundwater.app/gallery3d.html#webpage",
-      "url": "https://www.compoundwater.app/gallery3d.html",
-      "name": "3D 展間 | 攝影作品集 | CompoundWater 複水",
+      "@id": "https://www.compoundwater.app/gallery3d-white.html#webpage",
+      "url": "https://www.compoundwater.app/gallery3d-white.html",
+      "name": "白盒子展間 | 攝影作品集 | CompoundWater 複水",
       "description": "CompoundWater 複水 — #PHOTOGRAPHY BY LIN · Minnesota, 2015 的 3D 虛擬展間，四個系列 25 幅作品掛在展場牆上，可自由走動觀展。",
       "inLanguage": "zh-Hant",
       "isPartOf": {
@@ -1201,15 +1287,15 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) onRe
     },
     {
       "@type": "CreativeWork",
-      "@id": "https://www.compoundwater.app/gallery3d.html#exhibition",
-      "name": "The Film Room 底片展間 — 3D Virtual Exhibition",
+      "@id": "https://www.compoundwater.app/gallery3d-white.html#exhibition",
+      "name": "The White Room 白盒子展間 — 3D Virtual Exhibition",
       "creator": [
         {
           "@id": "https://www.compoundwater.app/#person-frank"
         }
       ],
       "about": "以 3D 虛擬展場呈現 2015 年明尼蘇達大學雙城分校交換學生時期拍攝的底片攝影作品集",
-      "url": "https://www.compoundwater.app/gallery3d.html",
+      "url": "https://www.compoundwater.app/gallery3d-white.html",
       "isBasedOn": {
         "@id": "https://www.compoundwater.app/photography.html#photoseries"
       }
