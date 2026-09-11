@@ -268,6 +268,7 @@
 
   @media (max-width:760px){
     .hud-status{left:16px;font-size:10px;padding:8px 11px;}
+    .hud-status .head{display:none;}   /* 窄螢幕讓出空間給右邊的按鈕 */
     .hud-tools{right:16px;}
     .hud-hint{font-size:10px;padding:7px 10px;}
   }
@@ -294,12 +295,13 @@
 
 <!-- HUD -->
 <div class="hud hud-status mono">
-  <div>PHOTOGRAPHY BY LIN / MINNESOTA 2015</div>
+  <div class="head">PHOTOGRAPHY BY LIN / MINNESOTA 2015</div>
   <div>NOW VIEWING — <span class="now" id="nowSeries">—</span> <span class="cn" id="nowSeriesCn"></span></div>
   <div>WORK <span id="nowCount">00 / 25</span></div>
 </div>
 
 <div class="hud hud-tools">
+  <button class="tool-btn" id="audioBtn" type="button">[ ♪ 展場音樂 ]</button>
   <button class="tool-btn" id="tourBtn" type="button">[ 自動導覽 ]</button>
   <button class="tool-btn" id="resetBtn" type="button">[ 回到入口 ]</button>
   <a class="tool-btn" id="exitLink" href="photography.html">[ 離開展間 ]</a>
@@ -339,6 +341,7 @@
   <div class="keys" id="keysHint">
     <div><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 或 <kbd>方向鍵</kbd> 走動 · <kbd>Shift</kbd> 快走</div>
     <div>滑鼠拖曳（或點一下鎖定視角）看四周 · 點擊作品放大 · <kbd>Esc</kbd> 退出</div>
+    <div>展場有一段輕音樂，右上角 <kbd>♪</kbd> 可以隨時關掉</div>
   </div>
   <a class="back mono" id="backLink" href="photography.html">[ 回到攝影作品集 ]</a>
 </div>
@@ -411,7 +414,8 @@ if (isTouch) {
   const kh = document.getElementById('keysHint');
   if (kh) kh.innerHTML =
     '<div>左下<kbd>搖桿</kbd>走動 · 拖曳畫面看四周</div>' +
-    '<div>點一下作品就能放大細看原圖</div>';
+    '<div>點一下作品就能放大細看原圖</div>' +
+    '<div>展場有一段輕音樂，右上角 <kbd>♪</kbd> 可以關掉</div>';
 }
 
 const canvas = document.getElementById('scene');
@@ -1157,9 +1161,196 @@ function updateHud(){
 enterBtn.addEventListener('click', () => {
   loaderEl.classList.add('gone');
   started = true;
+  Ambience.enterGesture();
   setTimeout(() => { loaderEl.style.display = 'none'; }, 520);
   if (!isTouch && !EMBED) requestLock();
 });
+
+// ============================================================
+//  展場的環境音
+//  不放音檔：用 Web Audio 即時合成一段緩慢的和弦鋪底，
+//  偶爾飄過一顆鐘聲，像美術館裡的聲音裝置。
+// ============================================================
+const Ambience = (() => {
+  const KEY = 'cw-gallery-music';
+  const LEVEL = 0.11;
+
+  // A 小調的四個和弦，一個接一個疊著換，聽起來不會有「一段音樂重播」的感覺
+  const CHORDS = [
+    [45, 52, 57, 64],   // Am9
+    [41, 48, 52, 57],   // Fmaj7
+    [48, 55, 59, 64],   // Cmaj9
+    [43, 50, 59, 66]    // G6
+  ];
+  const BELLS = [69, 72, 74, 76, 79, 81];   // 五聲音階，怎麼撒都不會刺耳
+  const midi = m => 440 * Math.pow(2, (m - 69) / 12);
+
+  let ctx = null, master = null, wet = null, filter = null;
+  let chordTimer = null, bellTimer = null, chordIdx = 0;
+  let on = false, built = false;
+
+  // 用雜訊做一段衰減曲線當殘響，省得載入 IR 音檔
+  function makeReverb(seconds, decay){
+    const rate = ctx.sampleRate, len = Math.floor(rate * seconds);
+    const buf = ctx.createBuffer(2, len, rate);
+    for (let ch = 0; ch < 2; ch++) {
+      const data = buf.getChannelData(ch);
+      for (let i = 0; i < len; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+      }
+    }
+    const conv = ctx.createConvolver();
+    conv.buffer = buf;
+    return conv;
+  }
+
+  function build(){
+    if (built) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    ctx = new AC();
+
+    master = ctx.createGain();
+    master.gain.value = 0;
+    master.connect(ctx.destination);
+
+    filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 900;
+    filter.Q.value = 0.4;
+    filter.connect(master);
+
+    // 濾波器慢慢呼吸，鋪底才不會死板
+    const lfo = ctx.createOscillator();
+    const lfoGain = ctx.createGain();
+    lfo.frequency.value = 0.03;
+    lfoGain.gain.value = 260;
+    lfo.connect(lfoGain).connect(filter.frequency);
+    lfo.start();
+
+    const reverb = makeReverb(4.5, 2.6);
+    wet = ctx.createGain();
+    wet.gain.value = 0.55;
+    reverb.connect(master);
+    wet.connect(reverb);
+
+    built = true;
+  }
+
+  // 一個和弦：長長地淡入、撐著、再淡出，跟下一個和弦交疊
+  function playChord(notes){
+    const t = ctx.currentTime;
+    const ATT = 6, HOLD = 7, REL = 7;
+    notes.forEach((n, i) => {
+      [0, 1].forEach(d => {                       // 每個音兩顆振盪器，微微失諧
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = i === 0 ? 'sine' : 'triangle';
+        osc.frequency.value = midi(n);
+        osc.detune.value = (d === 0 ? -5 : 5) + (Math.random() * 4 - 2);
+        const peak = (i === 0 ? 0.16 : 0.09) / (d + 1.4);
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.exponentialRampToValueAtTime(peak, t + ATT);
+        gain.gain.setValueAtTime(peak, t + ATT + HOLD);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + ATT + HOLD + REL);
+        osc.connect(gain);
+        gain.connect(filter);
+        gain.connect(wet);
+        osc.start(t);
+        osc.stop(t + ATT + HOLD + REL + 0.4);
+      });
+    });
+  }
+
+  // 偶爾一顆鐘聲，位置隨機左右飄
+  function playBell(){
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+    osc.type = 'sine';
+    osc.frequency.value = midi(BELLS[(Math.random() * BELLS.length) | 0]);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.055, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 5.5);
+    osc.connect(gain);
+    if (pan) { pan.pan.value = Math.random() * 1.6 - 0.8; gain.connect(pan); pan.connect(master); pan.connect(wet); }
+    else { gain.connect(master); gain.connect(wet); }
+    osc.start(t);
+    osc.stop(t + 6);
+  }
+
+  function schedule(){
+    clearTimeout(chordTimer); clearTimeout(bellTimer);
+    const nextChord = () => {
+      playChord(CHORDS[chordIdx % CHORDS.length]);
+      chordIdx++;
+      chordTimer = setTimeout(nextChord, 15000);
+    };
+    nextChord();
+    const nextBell = () => {
+      playBell();
+      bellTimer = setTimeout(nextBell, 9000 + Math.random() * 11000);
+    };
+    bellTimer = setTimeout(nextBell, 6000 + Math.random() * 6000);
+  }
+
+  function start(){
+    build();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') ctx.resume();
+    if (!on) schedule();
+    on = true;
+    master.gain.cancelScheduledValues(ctx.currentTime);
+    master.gain.setValueAtTime(Math.max(master.gain.value, 0.0001), ctx.currentTime);
+    master.gain.linearRampToValueAtTime(LEVEL, ctx.currentTime + 3);
+    paint();
+  }
+
+  function stop(){
+    if (!ctx || !on) { on = false; paint(); return; }
+    master.gain.cancelScheduledValues(ctx.currentTime);
+    master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
+    master.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 1.2);
+    clearTimeout(chordTimer); clearTimeout(bellTimer);
+    on = false;
+    setTimeout(() => { if (!on && ctx && ctx.state === 'running') ctx.suspend(); }, 1500);
+    paint();
+  }
+
+  function wanted(){
+    try { return localStorage.getItem(KEY) !== 'off'; } catch (e) { return true; }
+  }
+  function remember(v){
+    try { localStorage.setItem(KEY, v ? 'on' : 'off'); } catch (e) {}
+  }
+
+  const btn = document.getElementById('audioBtn');
+  function paint(){
+    if (!btn) return;
+    btn.textContent = on ? '[ ♪ 音樂開 ]' : '[ ♪ 音樂關 ]';
+    btn.classList.toggle('on', on);
+  }
+  if (btn) {
+    btn.addEventListener('click', () => {
+      if (on) { remember(false); stop(); }
+      else { remember(true); start(); }
+      btn.blur();
+    });
+  }
+
+  // 分頁切走就安靜下來，切回來再接上
+  document.addEventListener('visibilitychange', () => {
+    if (!ctx || !on) return;
+    if (document.hidden) ctx.suspend();
+    else ctx.resume();
+  });
+
+  return {
+    // 使用者點「進入展間」的那一下，就是瀏覽器允許出聲的時機
+    enterGesture(){ if (wanted()) start(); else paint(); }
+  };
+})();
 
 // ============================================================
 //  主迴圈
