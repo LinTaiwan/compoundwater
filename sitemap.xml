@@ -20,7 +20,7 @@
   </url>
   <url>
     <loc>https://www.compoundwater.app/whoarewe.html</loc>
-    <lastmod>2026-07-15</lastmod>
+    <lastmod>2026-09-11</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -32,6 +32,12 @@
   </url>
   <url>
     <loc>https://www.compoundwater.app/gallery3d-white.html</loc>
+    <lastmod>2026-09-11</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.compoundwater.app/whoarewe3d/</loc>
     <lastmod>2026-09-11</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
