@@ -175,7 +175,8 @@
     <p style="color:#6f6a61;font-size:13px">55 件作品 · 55 種對「我們是誰」的回答</p>
     <button class="btn" id="enter">進 入 展 場</button>
     <div class="hint">WASD / 方向鍵 移動　·　滑鼠 轉向　·　Shift 快走<br>
-      對準畫作 點擊 觀看　·　ESC 離開</div>
+      對準畫作 點擊 觀看　·　ESC 離開<br>
+      展場有環境音樂，右上角可以關掉</div>
   </div>
 </div>
 
@@ -184,6 +185,7 @@
   <div id="tools">
     <button class="tool" id="btnTour">自動導覽</button>
     <button class="tool" id="btnList">作品索引</button>
+    <button class="tool" id="btnMusic">音樂</button>
     <a class="tool" id="exitLink" href="/whoarewe.html">離開展間</a>
   </div>
   <div id="crosshair"></div>
@@ -436,12 +438,12 @@ function buildStatue(loader){
   const S = (c, rough, metal) => new THREE.MeshStandardMaterial(
     {color:c, roughness:rough, metalness:metal||0});
 
-  const C = { skin:0xfaefed, hair:0x4e2e18, hairDark:0x462814, hat:0x141216,
+  const C = { skin:0xfaefed, hair:0x4e2e18, hairDark:0x462814, hat:0x0b0b0d,
               amber:0xf2ad24, pink:0xefa8ae, cloth:0x1b1b21, dark:0x151116, green:0x9ec18d };
 
   const matSkin  = S(C.skin, .84);
   const matHair  = S(C.hair, .66);
-  const matHat   = S(C.hat,  .55);
+  const matHat   = S(C.hat,  .62);
   const matAmber = S(C.amber,.34,.18);
   const matCloth = S(C.cloth,.78);
 
@@ -494,8 +496,37 @@ function buildStatue(loader){
     const r = Math.max(.46, 1.80*(1 - .93*Math.pow(t, 4.2)));
     torsoPts.push(new THREE.Vector2(r, y));
   }
-  const torso = add(new THREE.LatheGeometry(torsoPts, 56), matCloth, 0, 0, 0);
+  // 條紋上衣（神偷奶爸那種黑白橫條）＋ 背帶褲的肩帶
+  const torsoTex = canvasTex(1024, 512, (c,w,h)=>{
+    for(let i=0;i<13;i++){                            // 橫條
+      c.fillStyle = i%2 ? '#12121a' : '#f2f0ea';
+      c.fillRect(0, i*h/13, w, h/13 + 1);
+    }
+    c.fillStyle = '#12121a';                          // 兩條肩帶（往上越過肩膀）
+    for(const cx of [w*.34, w*.66]) c.fillRect(cx - w*.045, 0, w*.09, h*.62);
+  });
+  torsoTex.wrapS = THREE.RepeatWrapping;
+  torsoTex.offset.x = .5;                             // Lathe 的接縫在正面，整體轉半圈避開
+  const torso = add(new THREE.LatheGeometry(torsoPts, 64),
+                    new THREE.MeshStandardMaterial({map:torsoTex, roughness:.82}), 0, 0, 0);
   torso.scale.z = .82;                                // 胸像前後薄一點
+
+  // 背帶褲的黑色圍兜：沿用同一條輪廓線外推，所以會貼著身體
+  const bibPts = torsoPts.filter(v => v.y <= 1.06).map(v => new THREE.Vector2(v.x + .04, v.y));
+  const bib = add(new THREE.LatheGeometry(bibPts, 48, -0.62, 1.24),
+                  S(0x0d0d12, .8), 0, 0, 0);
+  bib.scale.z = .82;
+
+  // 圍兜上的 Hannah
+  const chestText = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.88, 1.88, .46, 48, 1, true, -0.50, 1.00),
+    new THREE.MeshBasicMaterial({ transparent:true, side:THREE.DoubleSide, depthWrite:false,
+      map: canvasTex(700, 170, (c,w,h)=>{
+        c.clearRect(0,0,w,h); c.fillStyle='#f2ad24'; c.textAlign='center';
+        c.font='700 92px "Noto Sans TC","PingFang TC",sans-serif';
+        c.fillText('Hannah', w/2, h/2+34);
+      })}));
+  chestText.position.set(0, .60, 0); chestText.scale.z = .82; bust.add(chestText);
 
   /* 脖子 */
   add(new THREE.CylinderGeometry(.54, .60, .55, 36), matSkin, 0, 1.58, .02);
@@ -574,32 +605,33 @@ function buildStatue(loader){
 
   /* 耳朵 ＋ 耳環 */
   for(const sx of [-1, 1]){
-    const ear = add(new THREE.SphereGeometry(.20, 24, 18), matSkin, sx*1.10, HY - .06, .06);
-    ear.scale.set(.42, 1, .72);
-    const tag = add(new THREE.TorusGeometry(.20, .05, 8, 4), S(C.green,.5), sx*1.06, HY - .50, .24);
-    tag.rotation.set(0, sx*.45, Math.PI/4);
-  }
+    // 耳朵：露在頭髮外面
+    const ear = add(new THREE.SphereGeometry(.30, 28, 20), matSkin, sx*1.42, HY - .02, .45);
+    ear.scale.set(.44, 1.05, .80);
+    const lobe = add(new THREE.TorusGeometry(.14, .04, 10, 20), S(C.skin,.7), sx*1.46, HY - .00, .47);
+    lobe.rotation.y = Math.PI/2; lobe.scale.z = .55;
 
-  /* 鏡腳：畫上的眼鏡延伸到耳朵，補一點立體細節 */
-  for(const sx of [-1, 1]){
-    const temple = add(new THREE.BoxGeometry(.66, .05, .05), matAmber, sx*.92, HY + .04, .58);
-    temple.rotation.y = sx*.92;
+    // 耳環：綠色菱形框，中間一個 ₿
+    const ring = add(new THREE.TorusGeometry(.26, .045, 8, 4), S(C.green,.55), sx*1.44, HY - .72, .40);
+    ring.rotation.z = Math.PI/4;                      // 方框轉 45° → 菱形，正面朝前
+    const btc = new THREE.Mesh(new THREE.PlaneGeometry(.26, .26),
+      new THREE.MeshBasicMaterial({ transparent:true, side:THREE.DoubleSide, depthWrite:false,
+        map: canvasTex(128,128,(c,w,h)=>{
+          c.clearRect(0,0,w,h); c.fillStyle='#9ec18d'; c.textAlign='center';
+          c.font='700 96px "IBM Plex Mono",Menlo,monospace';
+          c.fillText('\u20BF', w/2, h/2+34);
+        })}));
+    btc.position.set(sx*1.44, HY - .72, .435); bust.add(btc);
+
+    // 鏡腳：從臉上那副黃色方框一路掛到耳朵
+    const temple = add(new THREE.BoxGeometry(.74, .055, .055), matAmber,
+                       sx*1.16, HY + .03, .60);
+    temple.rotation.y = sx > 0 ? .524 : Math.PI - .524;
   }
 
   /* 項鍊 */
   const chain = add(new THREE.TorusGeometry(.56, .055, 12, 44), matAmber, 0, 1.40, .02);
   chain.rotation.x = Math.PI/2; chain.scale.z = .82;
-
-  /* 胸前的 Hannah */
-  const chestText = new THREE.Mesh(
-    new THREE.CylinderGeometry(1.90, 1.90, .50, 48, 1, true, -0.52, 1.04),
-    new THREE.MeshBasicMaterial({ transparent:true, side:THREE.DoubleSide, depthWrite:false,
-      map: canvasTex(700,170,(c,w,h)=>{
-        c.clearRect(0,0,w,h); c.fillStyle='#f2ad24'; c.textAlign='center';
-        c.font='700 92px "Noto Sans TC","PingFang TC",sans-serif';
-        c.fillText('Hannah', w/2, h/2+34);
-      })}));
-  chestText.position.set(0, .62, 0); chestText.scale.z = .82; bust.add(chestText);
 
   /* ---------- 石座銘牌 ---------- */
   const plate = new THREE.Mesh(
@@ -901,8 +933,123 @@ document.getElementById('btnList').onclick = ()=>{
 document.getElementById('enter').onclick = ()=>{
   document.getElementById('intro').style.display='none';
   document.getElementById('hud').style.display='block';
+  if(wantMusic) Ambient.start();
+  syncMusicBtn();
   if(!matchMedia('(pointer:coarse)').matches) lockPointer();
 };
+
+/* ---------------- 展場環境音（即時合成，沒有外部音檔） ----------------
+   緩慢流動的和弦墊 ＋ 偶爾落下的單音，走美術館的安靜調性。          */
+const Ambient = (() => {
+  let ctx = null, master = null, timers = [], on = false;
+
+  const CHORDS = [                                    // Dmaj9 → Bm9 → Gmaj7 → A6sus
+    [146.83, 220.00, 277.18, 329.63, 415.30],
+    [123.47, 185.00, 246.94, 293.66, 369.99],
+    [196.00, 246.94, 293.66, 392.00, 493.88],
+    [110.00, 164.81, 220.00, 277.18, 329.63]
+  ];
+  const BELLS = [587.33, 659.25, 739.99, 880.00, 987.77, 1174.66];
+
+  function build(){
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    master = ctx.createGain();
+    master.gain.value = 0.0001;
+    master.connect(ctx.destination);
+
+    const delay = ctx.createDelay(5);  delay.delayTime.value = .62;   // 一點空間殘響
+    const fb    = ctx.createGain();    fb.gain.value = .40;
+    const wet   = ctx.createGain();    wet.gain.value = .30;
+    delay.connect(fb); fb.connect(delay); delay.connect(wet); wet.connect(master);
+
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.value = 1150; lp.Q.value = .5;
+    lp.connect(master); lp.connect(delay);
+    return lp;
+  }
+
+  function pad(bus, freqs, t0, dur){
+    freqs.forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = i === 0 ? 'sine' : 'triangle';
+      o.frequency.value = f;
+      o.detune.value = (Math.random() - .5) * 8;      // 微微失諧，聲音才不死
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(.055 / (i + 1.4), t0 + dur * .35);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.connect(g); g.connect(bus);
+      o.start(t0); o.stop(t0 + dur + .1);
+    });
+  }
+
+  function bell(bus){
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    const pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+    o.type = 'sine';
+    o.frequency.value = BELLS[Math.floor(Math.random() * BELLS.length)];
+    const t0 = ctx.currentTime;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(.07, t0 + .04);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 3.6);
+    o.connect(g);
+    if(pan){ pan.pan.value = (Math.random() - .5) * 1.2; g.connect(pan); pan.connect(bus); }
+    else g.connect(bus);
+    o.start(t0); o.stop(t0 + 3.8);
+  }
+
+  function loop(bus){
+    let i = 0;
+    const step = () => {
+      pad(bus, CHORDS[i % CHORDS.length], ctx.currentTime, 16);
+      i++; timers.push(setTimeout(step, 12000));
+    };
+    step();
+    const ring = () => {
+      if(Math.random() < .7) bell(bus);
+      timers.push(setTimeout(ring, 4000 + Math.random() * 7000));
+    };
+    timers.push(setTimeout(ring, 3000));
+  }
+
+  return {
+    get playing(){ return on; },
+    start(){
+      try{
+        if(!ctx){ const bus = build(); loop(bus); }
+        ctx.resume();
+        master.gain.cancelScheduledValues(ctx.currentTime);
+        master.gain.setValueAtTime(Math.max(master.gain.value, 0.0001), ctx.currentTime);
+        master.gain.linearRampToValueAtTime(.5, ctx.currentTime + 3);
+        on = true;
+      }catch(e){ on = false; }
+      return on;
+    },
+    stop(){
+      if(!ctx){ on = false; return; }
+      master.gain.cancelScheduledValues(ctx.currentTime);
+      master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
+      master.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 1.2);
+      on = false;
+    }
+  };
+})();
+
+const btnMusic = document.getElementById('btnMusic');
+// 鑲在頁面裡預設安靜，全螢幕進來預設有音樂；使用者選過就記住
+const musicPref = (() => { try{ return localStorage.getItem('whoarewe-music'); }catch(_){ return null; } })();
+let wantMusic = musicPref !== null ? musicPref === '1' : !EMBED;
+
+function syncMusicBtn(){
+  btnMusic.classList.toggle('on', Ambient.playing);
+  btnMusic.textContent = Ambient.playing ? '音樂 ♪' : '音樂 ✕';
+}
+btnMusic.onclick = () => {
+  if(Ambient.playing){ Ambient.stop(); wantMusic = false; }
+  else { Ambient.start(); wantMusic = true; }
+  try{ localStorage.setItem('whoarewe-music', wantMusic ? '1' : '0'); }catch(_){}
+  syncMusicBtn();
+};
+syncMusicBtn();
 
 /* ---------------- 主迴圈 ---------------- */
 const cross = document.getElementById('crosshair');
