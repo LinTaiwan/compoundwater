@@ -1167,26 +1167,33 @@ enterBtn.addEventListener('click', () => {
 });
 
 // ============================================================
-//  展場的環境音
-//  不放音檔：用 Web Audio 即時合成一段緩慢的和弦鋪底，
-//  偶爾飄過一顆鐘聲，像美術館裡的聲音裝置。
+//  展場的音樂
+//  一樣不放音檔：用 Web Audio 即時生成。大調、100 BPM，
+//  拇指琴一樣的分解和弦跑句配上很輕的沙鈴，聽起來是明亮的，
+//  但每一輪的取音都不完全一樣，不會有「同一段又重播」的感覺。
 // ============================================================
 const Ambience = (() => {
   const KEY = 'cw-gallery-music';
-  const LEVEL = 0.11;
+  const LEVEL = 0.55;
 
-  // A 小調的四個和弦，一個接一個疊著換，聽起來不會有「一段音樂重播」的感覺
-  const CHORDS = [
-    [45, 52, 57, 64],   // Am9
-    [41, 48, 52, 57],   // Fmaj7
-    [48, 55, 59, 64],   // Cmaj9
-    [43, 50, 59, 66]    // G6
+  const BPM  = 100;
+  const STEP = (60 / BPM) / 2;      // 八分音符
+  const BARS = 16;                  // 一個和弦走 16 步（兩小節）
+
+  // C 大調的四個和弦，亮但不甜膩
+  const PROG = [
+    { pad: [48, 55, 59, 62], bass: 36, arp: [60, 62, 64, 67, 71, 72] },  // Cmaj9
+    { pad: [45, 52, 57, 64], bass: 33, arp: [57, 60, 64, 67, 69, 72] },  // Am7
+    { pad: [41, 48, 53, 60], bass: 29, arp: [60, 65, 69, 72, 74, 77] },  // Fmaj7
+    { pad: [43, 50, 55, 59], bass: 31, arp: [59, 62, 67, 71, 74, 76] }   // G6
   ];
-  const BELLS = [69, 72, 74, 76, 79, 81];   // 五聲音階，怎麼撒都不會刺耳
+  // 跑句的取音順序，null 是留白——有呼吸才不會像練習曲
+  const FIGURE = [0, 2, 4, 3, 1, 4, 2, null, 0, 3, 5, 4, 2, 4, null, 1];
+
   const midi = m => 440 * Math.pow(2, (m - 69) / 12);
 
-  let ctx = null, master = null, wet = null, filter = null;
-  let chordTimer = null, bellTimer = null, chordIdx = 0;
+  let ctx = null, master = null, wet = null, noiseBuf = null;
+  let timer = null, nextTime = 0, step = 0, chordIdx = 0;
   let on = false, built = false;
 
   // 用雜訊做一段衰減曲線當殘響，省得載入 IR 音檔
@@ -1210,100 +1217,152 @@ const Ambience = (() => {
     if (!AC) return;
     ctx = new AC();
 
+    // 尾端掛一顆壓縮器當保險：好幾個音剛好疊在一起時不會爆掉
+    const limiter = ctx.createDynamicsCompressor();
+    limiter.threshold.value = -10;
+    limiter.knee.value = 8;
+    limiter.ratio.value = 12;
+    limiter.attack.value = 0.004;
+    limiter.release.value = 0.25;
+    limiter.connect(ctx.destination);
+
     master = ctx.createGain();
     master.gain.value = 0;
-    master.connect(ctx.destination);
+    master.connect(limiter);
 
-    filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 900;
-    filter.Q.value = 0.4;
-    filter.connect(master);
-
-    // 濾波器慢慢呼吸，鋪底才不會死板
-    const lfo = ctx.createOscillator();
-    const lfoGain = ctx.createGain();
-    lfo.frequency.value = 0.03;
-    lfoGain.gain.value = 260;
-    lfo.connect(lfoGain).connect(filter.frequency);
-    lfo.start();
-
-    const reverb = makeReverb(4.5, 2.6);
+    const reverb = makeReverb(2.6, 2.4);
     wet = ctx.createGain();
-    wet.gain.value = 0.55;
+    wet.gain.value = 0.32;            // 殘響比慢版少，節奏才不會糊掉
     reverb.connect(master);
     wet.connect(reverb);
+
+    // 沙鈴用的白雜訊
+    const len = Math.floor(ctx.sampleRate * 0.2);
+    noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
 
     built = true;
   }
 
-  // 一個和弦：長長地淡入、撐著、再淡出，跟下一個和弦交疊
-  function playChord(notes){
-    const t = ctx.currentTime;
-    const ATT = 6, HOLD = 7, REL = 7;
+  // 拇指琴一樣的撥奏：起音快、尾巴短
+  function pluck(note, t, vel){
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 2600;
+    osc.type = 'triangle';
+    osc.frequency.value = midi(note);
+    osc.detune.value = Math.random() * 6 - 3;
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(vel, t + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.85);
+    osc.connect(lp); lp.connect(gain);
+    gain.connect(master); gain.connect(wet);
+    osc.start(t); osc.stop(t + 0.95);
+  }
+
+  // 每小節開頭的低音，圓圓的、不搶戲
+  function bass(note, t){
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = midi(note);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.12, t + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.1);
+    osc.connect(gain); gain.connect(master);
+    osc.start(t); osc.stop(t + 1.2);
+  }
+
+  // 很輕的沙鈴，只是給一點推進感
+  function shaker(t, accent){
+    const src = ctx.createBufferSource();
+    const gain = ctx.createGain();
+    const hp = ctx.createBiquadFilter();
+    src.buffer = noiseBuf;
+    hp.type = 'highpass';
+    hp.frequency.value = 6500;
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(accent ? 0.028 : 0.012, t + 0.004);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + (accent ? 0.11 : 0.07));
+    src.connect(hp); hp.connect(gain); gain.connect(master);
+    src.start(t); src.stop(t + 0.2);
+  }
+
+  // 底下墊著的和弦，讓跑句不會孤單
+  function pad(notes, t, dur){
     notes.forEach((n, i) => {
-      [0, 1].forEach(d => {                       // 每個音兩顆振盪器，微微失諧
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = i === 0 ? 'sine' : 'triangle';
-        osc.frequency.value = midi(n);
-        osc.detune.value = (d === 0 ? -5 : 5) + (Math.random() * 4 - 2);
-        const peak = (i === 0 ? 0.16 : 0.09) / (d + 1.4);
-        gain.gain.setValueAtTime(0.0001, t);
-        gain.gain.exponentialRampToValueAtTime(peak, t + ATT);
-        gain.gain.setValueAtTime(peak, t + ATT + HOLD);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + ATT + HOLD + REL);
-        osc.connect(gain);
-        gain.connect(filter);
-        gain.connect(wet);
-        osc.start(t);
-        osc.stop(t + ATT + HOLD + REL + 0.4);
-      });
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 1100;
+      osc.type = i === 0 ? 'sine' : 'triangle';
+      osc.frequency.value = midi(n);
+      osc.detune.value = Math.random() * 8 - 4;
+      const peak = i === 0 ? 0.055 : 0.032;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(peak, t + dur * 0.28);
+      gain.gain.setValueAtTime(peak, t + dur * 0.62);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + dur * 1.06);
+      osc.connect(lp); lp.connect(gain);
+      gain.connect(master); gain.connect(wet);
+      osc.start(t); osc.stop(t + dur * 1.1 + 0.2);
     });
   }
 
-  // 偶爾一顆鐘聲，位置隨機左右飄
-  function playBell(){
-    const t = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    const pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
-    osc.type = 'sine';
-    osc.frequency.value = midi(BELLS[(Math.random() * BELLS.length) | 0]);
-    gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.exponentialRampToValueAtTime(0.055, t + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t + 5.5);
-    osc.connect(gain);
-    if (pan) { pan.pan.value = Math.random() * 1.6 - 0.8; gain.connect(pan); pan.connect(master); pan.connect(wet); }
-    else { gain.connect(master); gain.connect(wet); }
-    osc.start(t);
-    osc.stop(t + 6);
+  function scheduleStep(i, t){
+    const chord = PROG[chordIdx % PROG.length];
+    const pos = i % BARS;
+
+    if (pos === 0) {
+      pad(chord.pad, t, STEP * BARS);
+      bass(chord.bass, t);
+    }
+    if (pos === 8) bass(chord.bass + 7, t);
+
+    const pick = FIGURE[pos];
+    if (pick !== null) {
+      // 偶爾跳去相鄰的音，每一輪就不會一模一樣
+      const idx = Math.random() < 0.18
+        ? Math.min(chord.arp.length - 1, pick + 1)
+        : pick;
+      pluck(chord.arp[idx], t, 0.075 + Math.random() * 0.03);
+      // 偶爾補一顆高八度，像光點閃一下
+      if (Math.random() < 0.1) pluck(chord.arp[idx] + 12, t + STEP * 0.5, 0.035);
+    }
+
+    shaker(t, pos % 4 === 2);
+
+    if (pos === BARS - 1) chordIdx++;
   }
 
-  function schedule(){
-    clearTimeout(chordTimer); clearTimeout(bellTimer);
-    const nextChord = () => {
-      playChord(CHORDS[chordIdx % CHORDS.length]);
-      chordIdx++;
-      chordTimer = setTimeout(nextChord, 15000);
-    };
-    nextChord();
-    const nextBell = () => {
-      playBell();
-      bellTimer = setTimeout(nextBell, 9000 + Math.random() * 11000);
-    };
-    bellTimer = setTimeout(nextBell, 6000 + Math.random() * 6000);
+  // 標準的 lookahead 排程：提前一點點把音排進去，節奏才穩
+  function scheduler(){
+    if (!on) return;
+    while (nextTime < ctx.currentTime + 0.25) {
+      scheduleStep(step, nextTime);
+      nextTime += STEP;
+      step++;
+    }
+    timer = setTimeout(scheduler, 45);
   }
 
   function start(){
     build();
     if (!ctx) return;
     if (ctx.state === 'suspended') ctx.resume();
-    if (!on) schedule();
-    on = true;
+    if (!on) {
+      on = true;
+      step = 0;
+      nextTime = ctx.currentTime + 0.15;
+      scheduler();
+    }
     master.gain.cancelScheduledValues(ctx.currentTime);
     master.gain.setValueAtTime(Math.max(master.gain.value, 0.0001), ctx.currentTime);
-    master.gain.linearRampToValueAtTime(LEVEL, ctx.currentTime + 3);
+    master.gain.linearRampToValueAtTime(LEVEL, ctx.currentTime + 2);
     paint();
   }
 
@@ -1311,10 +1370,10 @@ const Ambience = (() => {
     if (!ctx || !on) { on = false; paint(); return; }
     master.gain.cancelScheduledValues(ctx.currentTime);
     master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
-    master.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 1.2);
-    clearTimeout(chordTimer); clearTimeout(bellTimer);
+    master.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 1);
+    clearTimeout(timer);
     on = false;
-    setTimeout(() => { if (!on && ctx && ctx.state === 'running') ctx.suspend(); }, 1500);
+    setTimeout(() => { if (!on && ctx && ctx.state === 'running') ctx.suspend(); }, 1400);
     paint();
   }
 
@@ -1342,8 +1401,8 @@ const Ambience = (() => {
   // 分頁切走就安靜下來，切回來再接上
   document.addEventListener('visibilitychange', () => {
     if (!ctx || !on) return;
-    if (document.hidden) ctx.suspend();
-    else ctx.resume();
+    if (document.hidden) { ctx.suspend(); }
+    else { ctx.resume(); nextTime = Math.max(nextTime, ctx.currentTime + 0.1); }
   });
 
   return {
