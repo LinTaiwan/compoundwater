@@ -938,18 +938,25 @@ document.getElementById('enter').onclick = ()=>{
   if(!matchMedia('(pointer:coarse)').matches) lockPointer();
 };
 
-/* ---------------- 展場環境音（即時合成，沒有外部音檔） ----------------
-   緩慢流動的和弦墊 ＋ 偶爾落下的單音，走美術館的安靜調性。          */
+/* ---------------- 展場音樂（即時合成，沒有外部音檔） ----------------
+   100 BPM 的輕快小品：低音、切分和弦、沙鈴、五聲音階旋律。        */
 const Ambient = (() => {
-  let ctx = null, master = null, timers = [], on = false;
+  let ctx = null, master = null, bus = null, timer = null, on = false;
+  let nextBar = 0, bar = 0, noiseBuf = null;
 
-  const CHORDS = [                                    // Dmaj9 → Bm9 → Gmaj7 → A6sus
-    [146.83, 220.00, 277.18, 329.63, 415.30],
-    [123.47, 185.00, 246.94, 293.66, 369.99],
-    [196.00, 246.94, 293.66, 392.00, 493.88],
-    [110.00, 164.81, 220.00, 277.18, 329.63]
+  const BPM  = 100;
+  const BEAT = 60 / BPM;            // 0.6s
+  const BAR  = BEAT * 4;
+
+  // Dmaj7 → Bm7 → Gmaj7 → A7sus，一小節一個和弦
+  const PROG = [
+    { root: 73.42,  notes: [293.66, 369.99, 440.00, 554.37] },  // D
+    { root: 61.74,  notes: [293.66, 349.23, 440.00, 587.33] },  // Bm
+    { root: 98.00,  notes: [293.66, 392.00, 493.88, 587.33] },  // G
+    { root: 110.00, notes: [329.63, 440.00, 493.88, 587.33] }   // Asus
   ];
-  const BELLS = [587.33, 659.25, 739.99, 880.00, 987.77, 1174.66];
+  // D 大調五聲，旋律用
+  const SCALE = [587.33, 659.25, 739.99, 880.00, 987.77, 1174.66, 1318.51];
 
   function build(){
     ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -957,69 +964,96 @@ const Ambient = (() => {
     master.gain.value = 0.0001;
     master.connect(ctx.destination);
 
-    const delay = ctx.createDelay(5);  delay.delayTime.value = .62;   // 一點空間殘響
-    const fb    = ctx.createGain();    fb.gain.value = .40;
-    const wet   = ctx.createGain();    wet.gain.value = .30;
+    // 短延遲，讓聲音有空間但不糊掉節奏
+    const delay = ctx.createDelay(1);  delay.delayTime.value = BEAT * .75;
+    const fb    = ctx.createGain();    fb.gain.value = .26;
+    const wet   = ctx.createGain();    wet.gain.value = .22;
     delay.connect(fb); fb.connect(delay); delay.connect(wet); wet.connect(master);
 
-    const lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass'; lp.frequency.value = 1150; lp.Q.value = .5;
-    lp.connect(master); lp.connect(delay);
-    return lp;
+    bus = ctx.createBiquadFilter();
+    bus.type = 'lowpass'; bus.frequency.value = 3200; bus.Q.value = .4;
+    bus.connect(master); bus.connect(delay);
+
+    // 沙鈴用的白噪音
+    const n = ctx.sampleRate * .3;
+    noiseBuf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for(let i=0;i<n;i++) d[i] = Math.random()*2 - 1;
   }
 
-  function pad(bus, freqs, t0, dur){
-    freqs.forEach((f, i) => {
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.type = i === 0 ? 'sine' : 'triangle';
-      o.frequency.value = f;
-      o.detune.value = (Math.random() - .5) * 8;      // 微微失諧，聲音才不死
-      g.gain.setValueAtTime(0.0001, t0);
-      g.gain.exponentialRampToValueAtTime(.055 / (i + 1.4), t0 + dur * .35);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-      o.connect(g); g.connect(bus);
-      o.start(t0); o.stop(t0 + dur + .1);
+  function voice(freq, t, dur, peak, type, pan){
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type || 'triangle';
+    o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(peak, t + .012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g);
+    if(pan !== undefined && ctx.createStereoPanner){
+      const p = ctx.createStereoPanner(); p.pan.value = pan;
+      g.connect(p); p.connect(bus);
+    } else g.connect(bus);
+    o.start(t); o.stop(t + dur + .05);
+  }
+
+  function hat(t, peak){
+    const src = ctx.createBufferSource(); src.buffer = noiseBuf;
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 6500;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(peak, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + .06);
+    src.connect(hp); hp.connect(g); g.connect(bus);
+    src.start(t); src.stop(t + .1);
+  }
+
+  function scheduleBar(i, t0){
+    const ch = PROG[i % PROG.length];
+
+    // 低音：1、3 拍 ＋ 第 4 拍後半的一個推進音
+    voice(ch.root, t0,             BEAT * 1.3, .18, 'sine');
+    voice(ch.root, t0 + BEAT * 2,  BEAT * 1.1, .15, 'sine');
+    if(i % 2 === 1) voice(ch.root * 1.5, t0 + BEAT * 3.5, BEAT * .5, .10, 'sine');
+
+    // 和弦：切分在 2、4 拍的後半，輕快感就是從這來的
+    [1.5, 3.5].forEach(b => {
+      ch.notes.forEach((f, k) =>
+        voice(f, t0 + BEAT * b, BEAT * .62, .075 - k * .008, 'triangle', (k - 1.5) * .28));
+    });
+
+    // 沙鈴：每個八分音符，反拍輕一點
+    for(let b = 0; b < 8; b++) hat(t0 + BEAT * b * .5, b % 2 ? .032 : .058);
+
+    // 旋律：五聲音階的隨機走動，留白也是一種輕
+    let idx = 2 + Math.floor(Math.random() * 3);
+    [0, .75, 1.5, 2.25, 3].forEach((b, k) => {
+      if(Math.random() < (k === 0 ? .8 : .5)){
+        idx = Math.max(0, Math.min(SCALE.length - 1, idx + (Math.random() < .5 ? -1 : 1)));
+        voice(SCALE[idx], t0 + BEAT * b, BEAT * .55, .10, 'sine', (Math.random() - .5) * .5);
+      }
     });
   }
 
-  function bell(bus){
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    const pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
-    o.type = 'sine';
-    o.frequency.value = BELLS[Math.floor(Math.random() * BELLS.length)];
-    const t0 = ctx.currentTime;
-    g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(.07, t0 + .04);
-    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 3.6);
-    o.connect(g);
-    if(pan){ pan.pan.value = (Math.random() - .5) * 1.2; g.connect(pan); pan.connect(bus); }
-    else g.connect(bus);
-    o.start(t0); o.stop(t0 + 3.8);
-  }
-
-  function loop(bus){
-    let i = 0;
-    const step = () => {
-      pad(bus, CHORDS[i % CHORDS.length], ctx.currentTime, 16);
-      i++; timers.push(setTimeout(step, 12000));
-    };
-    step();
-    const ring = () => {
-      if(Math.random() < .7) bell(bus);
-      timers.push(setTimeout(ring, 4000 + Math.random() * 7000));
-    };
-    timers.push(setTimeout(ring, 3000));
+  function pump(){
+    while(nextBar < ctx.currentTime + .8){
+      scheduleBar(bar++, nextBar);
+      nextBar += BAR;
+    }
   }
 
   return {
     get playing(){ return on; },
     start(){
       try{
-        if(!ctx){ const bus = build(); loop(bus); }
+        if(!ctx) build();
         ctx.resume();
+        if(!timer){
+          nextBar = ctx.currentTime + .12;
+          pump();
+          timer = setInterval(pump, 120);
+        }
         master.gain.cancelScheduledValues(ctx.currentTime);
         master.gain.setValueAtTime(Math.max(master.gain.value, 0.0001), ctx.currentTime);
-        master.gain.linearRampToValueAtTime(.5, ctx.currentTime + 3);
+        master.gain.linearRampToValueAtTime(1.0, ctx.currentTime + 1.6);
         on = true;
       }catch(e){ on = false; }
       return on;
@@ -1028,7 +1062,8 @@ const Ambient = (() => {
       if(!ctx){ on = false; return; }
       master.gain.cancelScheduledValues(ctx.currentTime);
       master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
-      master.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 1.2);
+      master.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + .8);
+      clearInterval(timer); timer = null;
       on = false;
     }
   };
