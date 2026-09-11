@@ -227,12 +227,14 @@ scene.background = new THREE.Color(0x0a0a0a);
 scene.fog = new THREE.Fog(0x0a0a0a, 26, 82);
 
 const camera = new THREE.PerspectiveCamera(62, innerWidth/innerHeight, 0.1, 300);
-camera.position.set(0, 1.65, 27);
+camera.position.set(0, 1.75, 12);
 
 const renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
 renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 app.appendChild(renderer.domElement);
 
 /* ---------------- 材質貼圖（程序生成） ---------------- */
@@ -282,7 +284,7 @@ const floorMat = new THREE.MeshStandardMaterial({
 });
 
 const floor = new THREE.Mesh(new THREE.PlaneGeometry(HX*2, HZ*2), floorMat);
-floor.rotation.x = -Math.PI/2; scene.add(floor);
+floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
 
 const ceil = new THREE.Mesh(new THREE.PlaneGeometry(HX*2, HZ*2),
   new THREE.MeshLambertMaterial({color:0x121116}));
@@ -312,8 +314,8 @@ for(const z of [-24,-8,8,24]){
 }
 
 /* ---------------- 燈光 ---------------- */
-scene.add(new THREE.AmbientLight(0xfff3e2, .52));
-scene.add(new THREE.HemisphereLight(0xbfd6ff, 0x1a1712, .35));
+scene.add(new THREE.AmbientLight(0xfff3e2, .44));
+scene.add(new THREE.HemisphereLight(0xbfd6ff, 0x1a1712, .26));
 for(const z of [-26,-13,0,13,26]){
   const p = new THREE.PointLight(0xffe9c4, .5, 34, 2);
   p.position.set(0, WH-1.2, z); scene.add(p);
@@ -342,79 +344,185 @@ PARTS.forEach(z=>{
 /* ---------------- 中央雕像：H.H 花醬 ---------------- */
 const STATUE = { y: 3.0, baseR: 2.35, baseH: .9 };   // y = 觀看時的視線高度
 
+/* 把幾何體逐點變形用的小工具 */
+function deform(geo, fn){
+  const p = geo.attributes.position, v = new THREE.Vector3();
+  for(let i=0;i<p.count;i++){ v.fromBufferAttribute(p,i); fn(v, i); p.setXYZ(i,v.x,v.y,v.z); }
+  p.needsUpdate = true; geo.computeVertexNormals(); return geo;
+}
+const ss = THREE.MathUtils.smoothstep;
+
 function buildStatue(loader){
   const g = new THREE.Group();
-  const M = (c, o={}) => new THREE.MeshLambertMaterial(Object.assign({color:c}, o));
-  const C = { skin:0xfdf5ea, hair:0x8f5f3d, hat:0x141414, amber:0xf7b32b, cloth:0x15151a };
+  const S = (c, rough, metal) => new THREE.MeshStandardMaterial(
+    {color:c, roughness:rough, metalness:metal||0});
 
-  const stone = new THREE.MeshLambertMaterial({
+  const C = { skin:0xf6e7dc, hair:0x4e2e18, hairDark:0x462814, hat:0x141216,
+              amber:0xf2ad24, pink:0xefa8ae, cloth:0x1b1b21, dark:0x151116, green:0x9ec18d };
+
+  const matSkin  = S(C.skin, .84);
+  const matHair  = S(C.hair, .66);
+  const matHat   = S(C.hat,  .55);
+  const matAmber = S(C.amber,.34,.18);
+  const matCloth = S(C.cloth,.78);
+
+  const stone = new THREE.MeshStandardMaterial({ roughness:.72, metalness:.02,
     map: canvasTex(256,256,(c,w,h)=>{
       c.fillStyle='#d8d3c7'; c.fillRect(0,0,w,h);
       for(let i=0;i<7000;i++){
         c.fillStyle=`rgba(0,0,0,${Math.random()*.05})`;
         c.fillRect(Math.random()*w,Math.random()*h,1,1);
       }
-    })
-  });
+    })});
 
-  /* ---- 地面嵌線 ＋ 石座 ---- */
+  /* ---------- 地面嵌線 ＋ 石座 ---------- */
   const inlay = new THREE.Mesh(new THREE.RingGeometry(STATUE.baseR+.5, STATUE.baseR+.78, 64),
     new THREE.MeshBasicMaterial({color:0x2e2c28, side:THREE.DoubleSide}));
   inlay.rotation.x = -Math.PI/2; inlay.position.y = .012; g.add(inlay);
 
   const base = new THREE.Mesh(new THREE.CylinderGeometry(STATUE.baseR, STATUE.baseR+.12, STATUE.baseH, 64), stone);
-  base.position.y = STATUE.baseH/2; g.add(base);
+  base.position.y = STATUE.baseH/2; base.receiveShadow = true; base.castShadow = true; g.add(base);
   const step = new THREE.Mesh(new THREE.CylinderGeometry(STATUE.baseR-.45, STATUE.baseR-.3, .34, 64), stone);
-  step.position.y = STATUE.baseH + .17; g.add(step);
+  step.position.y = STATUE.baseH + .17; step.receiveShadow = true; step.castShadow = true; g.add(step);
 
-  /* ---- 胸像：立體量體 ＋ 正面包上原圖 ---- */
+  /* ---------- 胸像 ---------- */
   const y0 = STATUE.baseH + .34;
   const bust = new THREE.Group(); bust.position.y = y0; g.add(bust);
   const add = (geo, mat, x, y, z) => {
-    const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); bust.add(m); return m;
+    const m = new THREE.Mesh(geo, mat); m.position.set(x,y,z);
+    m.castShadow = true; m.receiveShadow = true; bust.add(m); return m;
   };
 
-  const HY = 2.05;                      // 頭部中心（相對石座頂）
+  const HY = 2.90, HR = 1.16;      // 頭部中心高度 / 基準半徑
 
-  // 身體、脖子、項鍊
-  add(new THREE.CylinderGeometry(1.05, 1.60, 1.15, 44), M(C.cloth), 0, .575, 0);
-  add(new THREE.CylinderGeometry(.40, .46, .55, 28), M(C.skin), 0, .80, 0);
-  const chain = add(new THREE.TorusGeometry(.52, .055, 10, 36), M(C.amber), 0, 1.02, .02);
-  chain.rotation.x = Math.PI/2;
+  /* 胸口：用 Lathe 車出圓潤的肩線，底部切平 */
+  const torsoPts = [];
+  for(let i=0;i<=32;i++){
+    const t = i/32;                                   // 0 底部 → 1 頸根
+    const y = t*1.45;
+    const r = Math.max(.46, 1.80*(1 - .93*Math.pow(t, 4.2)));
+    torsoPts.push(new THREE.Vector2(r, y));
+  }
+  const torso = add(new THREE.LatheGeometry(torsoPts, 56), matCloth, 0, 0, 0);
+  torso.scale.z = .82;                                // 胸像前後薄一點
 
-  // 頭的量體：下半是頭髮、上半是帽子，兩顆球都比正面的弧面略小，只在側邊露出輪廓
-  const hairMass = add(new THREE.SphereGeometry(1.22, 48, 28), M(C.hair), 0, HY, -.02);
-  hairMass.scale.set(1.02, 1.06, .98);
-  const hatMass = add(new THREE.SphereGeometry(1.255, 48, 24, 0, Math.PI*2, 0, 1.02),
-                      M(C.hat, {emissive:0x080808}), 0, HY, -.02);
-  hatMass.rotation.x = -.08;
+  /* 脖子 */
+  add(new THREE.CylinderGeometry(.40, .50, .70, 32), matSkin, 0, 1.62, .02);
 
-  // 正面：把原圖包在弧面上（水平方向彎，跟臉一樣）
-  const headTex = loader.load('hh_head.png');
-  headTex.encoding = THREE.sRGBEncoding;
-  headTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-  const SW = 2.62, R = 1.30;            // 弧面寬度與半徑
-  const face = add(
-    new THREE.CylinderGeometry(R, R, SW/1.168, 64, 1, true, -(SW/R)/2, SW/R),
-    new THREE.MeshLambertMaterial({map:headTex, transparent:true, alphaTest:.35,
-                                   side:THREE.DoubleSide}),
+  /* 頭：由球體雕出臉型 */
+  const headGeo = deform(new THREE.SphereGeometry(1, 112, 72), v => {
+    const y = v.y, t = Math.max(0, -y);
+    const taper = 1 - .38*Math.pow(t, 1.45);          // 收下顎
+    v.x *= taper; v.z *= taper;
+    if(v.z < 0) v.z *= .93;                           // 後腦略平
+    if(y > .42 && v.z > 0) v.z *= .975;               // 額頭略平
+    const cheek = Math.exp(-Math.pow((y + .12)/.34, 2));
+    v.x *= 1 + .06*cheek; v.z *= 1 + .035*cheek;      // 臉頰飽滿
+    if(y < -.5 && v.z > .15) v.z += .07*(-y - .5);    // 下巴
+  });
+  const head = add(headGeo, matSkin, 0, HY, 0);
+  head.scale.set(HR*1.02, HR*.99, HR*.96);
+
+  /* 頭髮：有髮際線、髮絲溝紋，兩側垂到肩膀 */
+  const hairGeo = deform(new THREE.SphereGeometry(1, 140, 96), v => {
+    const a = Math.atan2(v.x, v.z), front = Math.cos(a);
+    const below = 1 - ss(v.y, .04, .52);              // 額頭以下
+    const hide  = Math.max(0, (front - .02)/.98) * below;
+    let r = 1 + .022*Math.sin(a*26) + .012*Math.sin(a*11 + v.y*6);
+    r *= 1 - .34*hide;                                // 正面縮進頭裡 → 露出臉
+    v.multiplyScalar(r);
+    const side = Math.pow(Math.max(0, 1 - front*.92), 1.15);
+    const down = 1 - ss(v.y, -.55, .5);
+    const fall = side * down;
+    v.y -= 1.34 * fall;                               // 兩側與後方的長髮
+    v.z -= .30 * fall;
+    v.x *= 1 + .16*fall;                              // 往下略微變厚
+    v.z *= 1 + .10*fall;
+    if(v.y < -1.25) { v.x *= .88; v.z *= .90; }       // 髮尾收圓
+  });
+  const hair = add(hairGeo, matHair, 0, HY, -.03);
+  hair.scale.set(HR*1.07, HR*1.10, HR*1.14);
+
+  /* 貝雷帽 */
+  const hatGeo = deform(new THREE.SphereGeometry(1, 96, 48, 0, Math.PI*2, 0, 1.34), v => {
+    v.y *= .70; v.x *= 1.03; v.z *= 1.01;
+    v.y += .05*Math.max(0, v.z);                      // 前緣微微翹
+  });
+  const hat = add(hatGeo, matHat, 0, HY + .10, -.02);
+  hat.scale.setScalar(HR*1.21); hat.rotation.x = -.12;
+  const brim = add(new THREE.TorusGeometry(1.0, .07, 14, 56), matHat, 0, HY + .26, -.02);
+  brim.rotation.x = Math.PI/2 - .12; brim.scale.set(HR*1.20, HR*1.20, 1);
+
+  /* 帽子上的 #Rich世 */
+  const capText = new THREE.Mesh(
+    new THREE.CylinderGeometry(HR*1.24, HR*1.24, .52, 48, 1, true, -0.80, 1.60),
+    new THREE.MeshBasicMaterial({ transparent:true, side:THREE.DoubleSide, depthWrite:false,
+      map: canvasTex(768,200,(c,w,h)=>{
+        c.clearRect(0,0,w,h); c.fillStyle='#f2ad24'; c.textAlign='center';
+        c.font='700 112px "Noto Sans TC","PingFang TC",sans-serif';
+        c.fillText('#Rich世', w/2, h/2+42);
+      })}));
+  capText.position.set(0, HY + .44, -.02); capText.rotation.x = -.12; bust.add(capText);
+
+  /* 臉：把原畫貼合在雕出來的曲面上（跟頭同一套變形，所以是跟著臉型彎的） */
+  const faceTex = loader.load('hh_face.png');
+  faceTex.encoding = THREE.sRGBEncoding;
+  faceTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  const capGeo = deform(
+    new THREE.SphereGeometry(1, 96, 64, Math.PI/2 - 1.18, 2.36, .58, 1.55), v => {
+      const y = v.y, t = Math.max(0, -y);
+      const taper = 1 - .38*Math.pow(t, 1.45);
+      v.x *= taper; v.z *= taper;
+      if(v.z < 0) v.z *= .93;
+      if(y > .42 && v.z > 0) v.z *= .975;
+      const cheek = Math.exp(-Math.pow((y + .12)/.34, 2));
+      v.x *= 1 + .06*cheek; v.z *= 1 + .035*cheek;
+      if(y < -.5 && v.z > .15) v.z += .07*(-y - .5);
+    });
+  {   // 平面投影 UV：把臉的圖精準對到臉的位置
+    const pos = capGeo.attributes.position, uv = capGeo.attributes.uv;
+    const X0 = -.97, XW = 1.94, Y0 = -1.02, YH = 1.36;
+    for(let i=0;i<pos.count;i++)
+      uv.setXY(i, (pos.getX(i) - X0)/XW, (pos.getY(i) - Y0)/YH);
+    uv.needsUpdate = true;
+  }
+  const faceMesh = add(capGeo, new THREE.MeshStandardMaterial({
+      map:faceTex, transparent:true, alphaTest:.22, roughness:.82,
+      polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2 }),
     0, HY, 0);
+  faceMesh.scale.set(HR*1.024, HR*.994, HR*.964);
+  faceMesh.castShadow = false;
 
-  // 胸前的 Hannah
+  /* 耳朵 ＋ 耳環 */
+  for(const sx of [-1, 1]){
+    const ear = add(new THREE.SphereGeometry(.20, 24, 18), matSkin, sx*1.10, HY - .06, .06);
+    ear.scale.set(.42, 1, .72);
+    const tag = add(new THREE.TorusGeometry(.20, .05, 8, 4), S(C.green,.5), sx*1.06, HY - .50, .24);
+    tag.rotation.set(0, sx*.45, Math.PI/4);
+  }
+
+  /* 鏡腳：畫上的眼鏡延伸到耳朵，補一點立體細節 */
+  for(const sx of [-1, 1]){
+    const temple = add(new THREE.BoxGeometry(.66, .05, .05), matAmber, sx*.92, HY + .04, .58);
+    temple.rotation.y = sx*.92;
+  }
+
+  /* 項鍊 */
+  const chain = add(new THREE.TorusGeometry(.56, .055, 12, 44), matAmber, 0, 1.40, .02);
+  chain.rotation.x = Math.PI/2; chain.scale.z = .82;
+
+  /* 胸前的 Hannah */
   const chestText = new THREE.Mesh(
-    new THREE.CylinderGeometry(1.40, 1.40, .38, 40, 1, true, -0.70, 1.40),
-    new THREE.MeshBasicMaterial({
-      transparent:true, side:THREE.DoubleSide, depthWrite:false,
-      map: canvasTex(640,160,(c,w,h)=>{
-        c.clearRect(0,0,w,h);
-        c.fillStyle='#f7b32b'; c.textAlign='center';
-        c.font='700 88px "Noto Sans TC","PingFang TC",sans-serif';
-        c.fillText('Hannah', w/2, h/2+32);
-      })
-    }));
-  chestText.position.set(0, .42, 0); bust.add(chestText);
+    new THREE.CylinderGeometry(1.78, 1.78, .40, 44, 1, true, -0.56, 1.12),
+    new THREE.MeshBasicMaterial({ transparent:true, side:THREE.DoubleSide, depthWrite:false,
+      map: canvasTex(700,170,(c,w,h)=>{
+        c.clearRect(0,0,w,h); c.fillStyle='#f2ad24'; c.textAlign='center';
+        c.font='700 92px "Noto Sans TC","PingFang TC",sans-serif';
+        c.fillText('Hannah', w/2, h/2+34);
+      })}));
+  chestText.position.set(0, .56, 0); chestText.scale.z = .82; bust.add(chestText);
 
-  /* ---- 石座銘牌 ---- */
+  /* ---------- 石座銘牌 ---------- */
   const plate = new THREE.Mesh(new THREE.PlaneGeometry(1.7, .58), new THREE.MeshBasicMaterial({
     map: canvasTex(512,176,(c,w,h)=>{
       c.fillStyle='#1b1a1e'; c.fillRect(0,0,w,h);
@@ -423,24 +531,29 @@ function buildStatue(loader){
       c.fillText('H.H 花醬', w/2, 74);
       c.fillStyle='#8a8a83'; c.font='500 26px "IBM Plex Mono",Menlo,monospace';
       c.fillText('@hannah.huahua', w/2, 126);
-    })
-  }));
+    })}));
   plate.position.set(0, STATUE.baseH*.55, STATUE.baseR+.045); g.add(plate);
 
-  /* ---- 打光 ---- */
+  /* ---------- 打光：主燈投影 ＋ 補光 ＋ 背光 ---------- */
   const glow = new THREE.Mesh(new THREE.PlaneGeometry(9, 9),
     new THREE.MeshBasicMaterial({map:glowTex, transparent:true,
       blending:THREE.AdditiveBlending, depthWrite:false}));
   glow.rotation.x = -Math.PI/2; glow.position.y = .02; g.add(glow);
 
-  const key  = new THREE.PointLight(0xfff2d8, .70, 20, 2); key.position.set(2.4, 6.2, 4.0);  g.add(key);
-  const fill = new THREE.PointLight(0xcfe0ff, .35, 18, 2); fill.position.set(-3.2, 3.6, 3.0); g.add(fill);
-  const rim  = new THREE.PointLight(0xffe9c4, .35, 16, 2); rim.position.set(0, 4.4, -3.4);    g.add(rim);
+  const key = new THREE.SpotLight(0xfff4e2, .80, 24, .62, .45, 1.6);
+  key.position.set(2.8, 8.2, 4.2); key.target.position.set(0, 2.6, 0);
+  key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024);
+  key.shadow.camera.near = 1; key.shadow.camera.far = 22; key.shadow.bias = -0.0015;
+  g.add(key); g.add(key.target);
 
-  // 點擊範圍（整尊都能點）
-  const hit = new THREE.Mesh(new THREE.SphereGeometry(2.3, 16, 12),
+  const fill = new THREE.PointLight(0xd6e4ff, .28, 20, 2); fill.position.set(-3.6, 3.8, 3.2); g.add(fill);
+  const rim  = new THREE.PointLight(0xffe9c4, .40, 18, 2); rim.position.set(-.6, 5.2, -3.6); g.add(rim);
+
+  /* 點擊範圍 */
+  const hit = new THREE.Mesh(new THREE.SphereGeometry(2.5, 16, 12),
     new THREE.MeshBasicMaterial({visible:false}));
-  hit.position.y = y0 + 1.7; g.add(hit);
+  hit.position.y = y0 + 1.9; g.add(hit);
 
   scene.add(g);
   return hit;
@@ -519,8 +632,8 @@ for(let n=1; n<=TOTAL && n<=slots.length; n++){
 
 /* ---------------- 第一人稱控制 ---------------- */
 const player = {
-  pos: new THREE.Vector3(0, 1.65, 27),
-  yaw: 0, pitch: 0, vel: new THREE.Vector3()
+  pos: new THREE.Vector3(0, 1.75, 12),   // 進場正對中央雕像
+  yaw: 0, pitch: .02, vel: new THREE.Vector3()
 };
 const keys = {};
 addEventListener('keydown', e=>{
