@@ -22,7 +22,45 @@
   html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);
     font-family:"Noto Sans TC","PingFang TC","Helvetica Neue",Arial,sans-serif;
     -webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
   canvas{display:block}
+
+  /* ---------- NAV（與其他頁面同一套） ---------- */
+  header{
+    position:fixed;top:0;left:0;right:0;z-index:45;
+    background:rgba(10,10,10,.72);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top);
+  }
+  .nav-inner{
+    max-width:1080px;margin:0 auto;padding:16px 24px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .logo{font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.02em;
+    display:inline-flex;align-items:center;gap:9px}
+  .logo-mark{width:28px;height:28px;border-radius:50%;display:block}
+  .logo span{color:var(--ink)}
+  .navlinks{display:flex;gap:28px;font-family:var(--mono);font-size:12px;color:var(--dim)}
+  .navlinks a{transition:color .15s;white-space:nowrap}
+  .navlinks a:hover,.navlinks a.active{color:var(--yellow)}
+  .nav-toggle{display:none;background:none;border:1px solid var(--line);color:var(--ink);
+    width:36px;height:36px;border-radius:var(--radius);cursor:pointer;
+    font-family:var(--mono);font-size:16px;align-items:center;justify-content:center}
+  @media (max-width:760px){
+    .nav-toggle{display:flex}
+    .navlinks{
+      display:none;position:absolute;top:100%;left:0;right:0;
+      flex-direction:column;gap:0;background:var(--bg);
+      border-bottom:1px solid var(--line);padding:8px 24px 16px;
+    }
+    .navlinks.open{display:flex}
+    .navlinks a{padding:14px 0;border-bottom:1px solid var(--line)}
+    .navlinks a:last-child{border-bottom:none}
+  }
+
+  /* 鑲在頁面裡時（?embed=1）收掉站台 header，HUD 回到原位 */
+  body.embed header{display:none}
+  body.embed #brand{top:20px}
+  body.embed #tools{top:16px}
   #app{position:fixed;inset:0}
 
   /* ---------- 載入 ---------- */
@@ -54,10 +92,10 @@
 
   /* ---------- HUD ---------- */
   #hud{position:fixed;inset:0;z-index:20;pointer-events:none;display:none}
-  #brand{position:absolute;top:20px;left:24px;font-family:var(--mono);font-size:11px;
+  #brand{position:absolute;top:calc(80px + env(safe-area-inset-top));left:24px;font-family:var(--mono);font-size:11px;
     letter-spacing:.3em;color:var(--dim)}
   #brand b{color:var(--yellow)}
-  #tools{position:absolute;top:16px;right:20px;display:flex;gap:8px;pointer-events:auto}
+  #tools{position:absolute;top:calc(76px + env(safe-area-inset-top));right:20px;display:flex;gap:8px;pointer-events:auto}
   .tool{border:1px solid var(--line);background:rgba(20,20,20,.65);color:#b5b5ac;font-size:11px;
     letter-spacing:.18em;padding:9px 15px;cursor:pointer;font-family:var(--mono);transition:.2s;
     backdrop-filter:blur(6px);border-radius:var(--radius)}
@@ -104,6 +142,21 @@
 </style>
 </head>
 <body>
+<header>
+  <div class="nav-inner">
+    <a class="logo" href="/index.html"><img src="newlogo.png" alt="CompoundWater 複水 logo" class="logo-mark">COMPOUNDWATER <span>複水</span></a>
+    <nav class="navlinks">
+      <a href="/index.html#partners">合作夥伴</a>
+      <a href="/index.html#media">播客訪談</a>
+      <a href="/index.html#insights">觀點內容</a>
+      <a href="/index.html#products" class="active">作品工具</a>
+      <a href="/index.html#trades">交易回顧</a>
+      <a href="/index.html#contact">聯繫</a>
+    </nav>
+    <button class="nav-toggle" id="navToggle" aria-label="開啟選單">☰</button>
+  </div>
+</header>
+
 <div id="app"></div>
 
 <div id="loader">
@@ -131,6 +184,7 @@
   <div id="tools">
     <button class="tool" id="btnTour">自動導覽</button>
     <button class="tool" id="btnList">作品索引</button>
+    <a class="tool" id="exitLink" href="/whoarewe.html">離開展間</a>
   </div>
   <div id="crosshair"></div>
   <div id="tip">WASD 移動 · 滑鼠轉向 · 對準畫作點擊</div>
@@ -219,6 +273,31 @@ const CAPTIONS = {
 const DEFAULT_TEXT =
   "「我們是誰？」— 這件作品是 #WhoAreWe 系列的其中一種回答。\n" +
   "整個系列始於一支隨手畫的塗鴉，最後成為 55 件走心客製的二創致敬。免費畫、自由 donate，純粹好玩。";
+
+/* ---------------- 站台 header ＋ 鑲嵌模式 ---------------- */
+const navToggle = document.getElementById('navToggle');
+const navMenu = document.querySelector('.navlinks');
+if(navToggle && navMenu){
+  navToggle.addEventListener('click', () => {
+    navMenu.classList.toggle('open');
+    navToggle.textContent = navMenu.classList.contains('open') ? '✕' : '☰';
+  });
+  navMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    navMenu.classList.remove('open'); navToggle.textContent = '☰';
+  }));
+}
+
+// 鑲在頁面裡（iframe，網址帶 ?embed=1）：收掉站台 header，離場連結改成開新分頁
+const EMBED = new URLSearchParams(location.search).has('embed');
+if(EMBED){
+  document.body.classList.add('embed');
+  const exit = document.getElementById('exitLink');
+  if(exit){
+    exit.textContent = '全螢幕開啟 ↗';
+    exit.href = location.pathname;
+    exit.target = '_blank'; exit.rel = 'noopener';
+  }
+}
 
 /* ---------------- 基本場景 ---------------- */
 const app = document.getElementById('app');
@@ -357,7 +436,7 @@ function buildStatue(loader){
   const S = (c, rough, metal) => new THREE.MeshStandardMaterial(
     {color:c, roughness:rough, metalness:metal||0});
 
-  const C = { skin:0xf6e7dc, hair:0x4e2e18, hairDark:0x462814, hat:0x141216,
+  const C = { skin:0xfaefed, hair:0x4e2e18, hairDark:0x462814, hat:0x141216,
               amber:0xf2ad24, pink:0xefa8ae, cloth:0x1b1b21, dark:0x151116, green:0x9ec18d };
 
   const matSkin  = S(C.skin, .84);
@@ -380,7 +459,7 @@ function buildStatue(loader){
     new THREE.MeshBasicMaterial({color:0x2e2c28, side:THREE.DoubleSide}));
   inlay.rotation.x = -Math.PI/2; inlay.position.y = .012; g.add(inlay);
 
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(STATUE.baseR, STATUE.baseR+.12, STATUE.baseH, 64), stone);
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(STATUE.baseR, STATUE.baseR, STATUE.baseH, 64), stone);
   base.position.y = STATUE.baseH/2; base.receiveShadow = true; base.castShadow = true; g.add(base);
   const step = new THREE.Mesh(new THREE.CylinderGeometry(STATUE.baseR-.45, STATUE.baseR-.3, .34, 64), stone);
   step.position.y = STATUE.baseH + .17; step.receiveShadow = true; step.castShadow = true; g.add(step);
@@ -395,6 +474,18 @@ function buildStatue(loader){
 
   const HY = 2.90, HR = 1.16;      // 頭部中心高度 / 基準半徑
 
+  /* 臉型：圓潤的娃娃臉，下巴不尖 */
+  function headShape(v){
+    const y = v.y, t = Math.max(0, -y);
+    v.x *= 1 - .15*Math.pow(t, 2.1);                  // 下顎只微微收
+    v.z *= 1 - .12*Math.pow(t, 2.1);
+    if(v.z < 0) v.z *= .94;                           // 後腦略平
+    if(y > .45 && v.z > 0) v.z *= .985;               // 額頭略平
+    const cheek = Math.exp(-Math.pow((y + .10)/.42, 2));
+    v.x *= 1 + .10*cheek; v.z *= 1 + .05*cheek;       // 臉頰飽滿
+    v.y *= 1 - .06*Math.pow(t, 2.4);                  // 下巴收圓，不往前尖
+  }
+
   /* 胸口：用 Lathe 車出圓潤的肩線，底部切平 */
   const torsoPts = [];
   for(let i=0;i<=32;i++){
@@ -407,38 +498,33 @@ function buildStatue(loader){
   torso.scale.z = .82;                                // 胸像前後薄一點
 
   /* 脖子 */
-  add(new THREE.CylinderGeometry(.40, .50, .70, 32), matSkin, 0, 1.62, .02);
+  add(new THREE.CylinderGeometry(.54, .60, .55, 36), matSkin, 0, 1.58, .02);
 
   /* 頭：由球體雕出臉型 */
-  const headGeo = deform(new THREE.SphereGeometry(1, 112, 72), v => {
-    const y = v.y, t = Math.max(0, -y);
-    const taper = 1 - .38*Math.pow(t, 1.45);          // 收下顎
-    v.x *= taper; v.z *= taper;
-    if(v.z < 0) v.z *= .93;                           // 後腦略平
-    if(y > .42 && v.z > 0) v.z *= .975;               // 額頭略平
-    const cheek = Math.exp(-Math.pow((y + .12)/.34, 2));
-    v.x *= 1 + .06*cheek; v.z *= 1 + .035*cheek;      // 臉頰飽滿
-    if(y < -.5 && v.z > .15) v.z += .07*(-y - .5);    // 下巴
-  });
+  const headGeo = deform(new THREE.SphereGeometry(1, 112, 72), headShape);
   const head = add(headGeo, matSkin, 0, HY, 0);
-  head.scale.set(HR*1.02, HR*.99, HR*.96);
+  head.scale.set(HR*1.07, HR*.98, HR*1.0);
 
   /* 頭髮：有髮際線、髮絲溝紋，兩側垂到肩膀 */
   const hairGeo = deform(new THREE.SphereGeometry(1, 140, 96), v => {
     const a = Math.atan2(v.x, v.z), front = Math.cos(a);
     const below = 1 - ss(v.y, .04, .52);              // 額頭以下
     const hide  = Math.max(0, (front - .02)/.98) * below;
-    let r = 1 + .022*Math.sin(a*26) + .012*Math.sin(a*11 + v.y*6);
-    r *= 1 - .34*hide;                                // 正面縮進頭裡 → 露出臉
+    // 髮絲溝紋；靠近髮際線處收平，否則邊緣會變成鋸齒
+    const ridge = (1 - hide) * (.022*Math.sin(a*26) + .012*Math.sin(a*11 + v.y*6));
+    let r = (1 + ridge) * (1 - .44*hide);             // 正面縮進頭裡 → 露出臉
     v.multiplyScalar(r);
     const side = Math.pow(Math.max(0, 1 - front*.92), 1.15);
     const down = 1 - ss(v.y, -.55, .5);
     const fall = side * down;
     v.y -= 1.34 * fall;                               // 兩側與後方的長髮
     v.z -= .30 * fall;
-    v.x *= 1 + .16*fall;                              // 往下略微變厚
-    v.z *= 1 + .10*fall;
-    if(v.y < -1.25) { v.x *= .88; v.z *= .90; }       // 髮尾收圓
+    v.x *= 1 + .30*fall;                              // 往下變厚，才有髮量
+    v.z *= 1 + .24*fall;
+    if(v.y < -1.15){                                  // 髮尾收圓
+      const k = 1 - .32*Math.min(1, (-1.15 - v.y)*1.7);
+      v.x *= k; v.z *= k;
+    }
   });
   const hair = add(hairGeo, matHair, 0, HY, -.03);
   hair.scale.set(HR*1.07, HR*1.10, HR*1.14);
@@ -460,7 +546,7 @@ function buildStatue(loader){
       map: canvasTex(768,200,(c,w,h)=>{
         c.clearRect(0,0,w,h); c.fillStyle='#f2ad24'; c.textAlign='center';
         c.font='700 112px "Noto Sans TC","PingFang TC",sans-serif';
-        c.fillText('#Rich世', w/2, h/2+42);
+        c.fillText('#Rich#', w/2, h/2+42);
       })}));
   capText.position.set(0, HY + .44, -.02); capText.rotation.x = -.12; bust.add(capText);
 
@@ -470,27 +556,20 @@ function buildStatue(loader){
   faceTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
   const capGeo = deform(
     new THREE.SphereGeometry(1, 96, 64, Math.PI/2 - 1.18, 2.36, .58, 1.55), v => {
-      const y = v.y, t = Math.max(0, -y);
-      const taper = 1 - .38*Math.pow(t, 1.45);
-      v.x *= taper; v.z *= taper;
-      if(v.z < 0) v.z *= .93;
-      if(y > .42 && v.z > 0) v.z *= .975;
-      const cheek = Math.exp(-Math.pow((y + .12)/.34, 2));
-      v.x *= 1 + .06*cheek; v.z *= 1 + .035*cheek;
-      if(y < -.5 && v.z > .15) v.z += .07*(-y - .5);
+      headShape(v);
     });
   {   // 平面投影 UV：把臉的圖精準對到臉的位置
     const pos = capGeo.attributes.position, uv = capGeo.attributes.uv;
-    const X0 = -.97, XW = 1.94, Y0 = -1.02, YH = 1.36;
+    const X0 = -.99, XW = 1.98, Y0 = -.92, YH = 1.26;
     for(let i=0;i<pos.count;i++)
       uv.setXY(i, (pos.getX(i) - X0)/XW, (pos.getY(i) - Y0)/YH);
     uv.needsUpdate = true;
   }
   const faceMesh = add(capGeo, new THREE.MeshStandardMaterial({
-      map:faceTex, transparent:true, alphaTest:.22, roughness:.82,
+      map:faceTex, transparent:true, alphaTest:0, depthWrite:false, roughness:.82,
       polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2 }),
     0, HY, 0);
-  faceMesh.scale.set(HR*1.024, HR*.994, HR*.964);
+  faceMesh.scale.set(HR*1.074, HR*.984, HR*1.004);
   faceMesh.castShadow = false;
 
   /* 耳朵 ＋ 耳環 */
@@ -513,17 +592,19 @@ function buildStatue(loader){
 
   /* 胸前的 Hannah */
   const chestText = new THREE.Mesh(
-    new THREE.CylinderGeometry(1.78, 1.78, .40, 44, 1, true, -0.56, 1.12),
+    new THREE.CylinderGeometry(1.90, 1.90, .50, 48, 1, true, -0.52, 1.04),
     new THREE.MeshBasicMaterial({ transparent:true, side:THREE.DoubleSide, depthWrite:false,
       map: canvasTex(700,170,(c,w,h)=>{
         c.clearRect(0,0,w,h); c.fillStyle='#f2ad24'; c.textAlign='center';
         c.font='700 92px "Noto Sans TC","PingFang TC",sans-serif';
         c.fillText('Hannah', w/2, h/2+34);
       })}));
-  chestText.position.set(0, .56, 0); chestText.scale.z = .82; bust.add(chestText);
+  chestText.position.set(0, .62, 0); chestText.scale.z = .82; bust.add(chestText);
 
   /* ---------- 石座銘牌 ---------- */
-  const plate = new THREE.Mesh(new THREE.PlaneGeometry(1.7, .58), new THREE.MeshBasicMaterial({
+  const plate = new THREE.Mesh(
+    new THREE.CylinderGeometry(STATUE.baseR+.012, STATUE.baseR+.012, .62, 64, 1, true, -0.37, 0.74),
+    new THREE.MeshBasicMaterial({ side:THREE.DoubleSide,
     map: canvasTex(512,176,(c,w,h)=>{
       c.fillStyle='#1b1a1e'; c.fillRect(0,0,w,h);
       c.fillStyle='#e9ff2e'; c.textAlign='center';
@@ -532,7 +613,7 @@ function buildStatue(loader){
       c.fillStyle='#8a8a83'; c.font='500 26px "IBM Plex Mono",Menlo,monospace';
       c.fillText('@hannah.huahua', w/2, 126);
     })}));
-  plate.position.set(0, STATUE.baseH*.55, STATUE.baseR+.045); g.add(plate);
+  plate.position.set(0, STATUE.baseH*.52, 0); g.add(plate);
 
   /* ---------- 打光：主燈投影 ＋ 補光 ＋ 背光 ---------- */
   const glow = new THREE.Mesh(new THREE.PlaneGeometry(9, 9),
