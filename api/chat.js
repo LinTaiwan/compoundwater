@@ -67,7 +67,7 @@ Matrixport、Amber、Max、Maicoin、BitoPro、Pionex、Mexc、Gate。
 
 個人創作：
 6. 《複水 2020 到 2026》—— 用 Suno AI 譜寫的個人創作歌曲，記錄 2020 到 2026 這六年交易旅程的
-   高低起伏，可以在卡片上直接點連結到 Suno 收聽。
+   高低起伏，網站上直接鑲嵌 Suno 的播放器，不用跳出站外就能點播放收聽。
 7. #WhoAreWe！H.H 花醬 x 複水 —— 2022 年起源於北京 Meta Space 咖啡廳的走心客製二創 mfers
    NFT 小專案，純好玩不收費、自由 donate，累積 55 位小夥伴的自畫像作品。
 8. #PHOTOGRAPHY BY LIN · Minnesota, 2015（photography.html）—— 2015 年在明尼蘇達大學雙城分校
