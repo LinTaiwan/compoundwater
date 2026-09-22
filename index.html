@@ -320,13 +320,7 @@
   .store-badge.primary{background:var(--yellow);border-color:var(--yellow);color:var(--bg);}
   .store-badge:hover{transform:translateY(-2px);}
 
-  .product-row-head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:0 0 12px;}
-  .product-row-head:not(:first-of-type){margin-top:28px;}
-  .product-row-label{
-    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);
-    letter-spacing:0.1em;
-  }
-  .product-row-head .carousel-btn{width:32px;height:32px;font-size:14px;}
+  .product-track-works{margin-top:28px;}
 
   .music-cover{
     background:
@@ -855,14 +849,12 @@
   <!-- PRODUCTS -->
   <section class="block" id="products">
     <div class="wrap">
-      <div class="section-head reveal">
-        <div class="section-num">03 / PRODUCTS</div>
-        <h2 class="section-title">作品與工具</h2>
-        <p class="section-sub">親手打造的實用工具，把工程師思維帶進財務規劃，加上幾個好玩的個人創作。</p>
-      </div>
-
-      <div class="product-row-head">
-        <div class="product-row-label">理財工具</div>
+      <div class="section-head reveal insights-head-row">
+        <div>
+          <div class="section-num">03 / PRODUCTS</div>
+          <h2 class="section-title">作品與工具</h2>
+          <p class="section-sub">親手打造的實用工具，把工程師思維帶進財務規劃，加上幾個好玩的個人創作。</p>
+        </div>
         <div class="carousel-nav">
           <button class="carousel-btn" id="toolsPrev" aria-label="上一則">←</button>
           <button class="carousel-btn" id="toolsNext" aria-label="下一則">→</button>
@@ -930,19 +922,11 @@
       </div>
       </div>
 
-      <div class="product-row-head">
-        <div class="product-row-label">個人創作</div>
-        <div class="carousel-nav">
-          <button class="carousel-btn" id="worksPrev" aria-label="上一則">←</button>
-          <button class="carousel-btn" id="worksNext" aria-label="下一則">→</button>
-        </div>
-      </div>
-      <div class="product-track" id="worksTrack">
+      <div class="product-track product-track-works" id="worksTrack">
       <div class="product-card reveal">
         <div>
           <div class="tag">MUSIC</div>
-          <div class="product-title-row"><div class="product-icon music-cover" aria-hidden="true"></div><h3>複水 2020 到 2026<br><span class="cn">AI 音樂創作</span></h3></div>
-          <p>用 AI 譜寫的個人創作，記錄 2020 到 2026 這六年交易旅程的高低起伏。</p>
+          <p>《複水 2020 到 2026》—— 用 AI 譜寫的個人創作，記錄這六年交易旅程的高低起伏。</p>
           <div class="music-embed-frame">
             <iframe src="https://suno.com/embed/3fa87429-01f5-4b62-a1bd-3abdeb4a1083" title="複水 2020 到 2026 by 複水 — Suno" loading="lazy" allow="autoplay" referrerpolicy="strict-origin-when-cross-origin"></iframe>
           </div>
@@ -1210,7 +1194,6 @@
     next.addEventListener('click', () => track.scrollBy({left: scrollAmount(), behavior: 'smooth'}));
   }
   initProductRow('toolsTrack', 'toolsPrev', 'toolsNext');
-  initProductRow('worksTrack', 'worksPrev', 'worksNext');
 
   // ---------- CHAT WIDGET ----------
   // NOTE: This calls a serverless endpoint at /api/chat which YOU need to create
