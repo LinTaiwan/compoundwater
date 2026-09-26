@@ -320,7 +320,9 @@
   .store-badge.primary{background:var(--yellow);border-color:var(--yellow);color:var(--bg);}
   .store-badge:hover{transform:translateY(-2px);}
 
-  .product-row-head-works{display:flex;justify-content:flex-end;align-items:center;margin:28px 0 12px;}
+  .product-row-head-works{display:flex;justify-content:space-between;align-items:center;margin:28px 0 12px;}
+  .product-count{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:0.08em;}
+  #toolsCount{margin:22px 0 4px;}
 
   .music-cover{
     background:
@@ -860,6 +862,7 @@
           <button class="carousel-btn" id="toolsNext" aria-label="下一則">→</button>
         </div>
       </div>
+      <div class="product-count" id="toolsCount"></div>
       <div class="product-track" id="toolsTrack">
       <div class="product-card reveal">
         <div>
@@ -945,6 +948,7 @@
       </div>
 
       <div class="product-row-head product-row-head-works">
+        <div class="product-count" id="worksCount"></div>
         <div class="carousel-nav">
           <button class="carousel-btn" id="worksPrev" aria-label="上一則">←</button>
           <button class="carousel-btn" id="worksNext" aria-label="下一則">→</button>
@@ -1221,6 +1225,10 @@
     prev.addEventListener('click', () => track.scrollBy({left: -scrollAmount(), behavior: 'smooth'}));
     next.addEventListener('click', () => track.scrollBy({left: scrollAmount(), behavior: 'smooth'}));
   }
+  [['toolsTrack','toolsCount','項工具'],['worksTrack','worksCount','項個人創作']].forEach(([t,c,label]) => {
+    const tr = document.getElementById(t), el = document.getElementById(c);
+    if (tr && el) el.textContent = '共 ' + tr.querySelectorAll('.product-card').length + ' ' + label;
+  });
   initProductRow('toolsTrack', 'toolsPrev', 'toolsNext');
   initProductRow('worksTrack', 'worksPrev', 'worksNext');
 
