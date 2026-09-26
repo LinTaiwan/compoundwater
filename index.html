@@ -1225,7 +1225,7 @@
     prev.addEventListener('click', () => track.scrollBy({left: -scrollAmount(), behavior: 'smooth'}));
     next.addEventListener('click', () => track.scrollBy({left: scrollAmount(), behavior: 'smooth'}));
   }
-  [['toolsTrack','toolsCount','項工具'],['worksTrack','worksCount','項個人創作']].forEach(([t,c,label]) => {
+  [['toolsTrack','toolsCount','項精心打造工具'],['worksTrack','worksCount','項藝術創作作品']].forEach(([t,c,label]) => {
     const tr = document.getElementById(t), el = document.getElementById(c);
     if (tr && el) el.textContent = '共 ' + tr.querySelectorAll('.product-card').length + ' ' + label;
   });
